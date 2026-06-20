@@ -34,6 +34,18 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * Custom validation messages (Caso de uso 13 - extensión 2A).
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Rellene todos los campos.',
+            'email.email' => 'Rellene todos los campos.',
+            'password.required' => 'Rellene todos los campos.',
+        ];
+    }
+
+    /**
      * Attempt to authenticate the request's credentials.
      *
      * @throws ValidationException
@@ -46,7 +58,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Credenciales de usuario incorrectas.',
             ]);
         }
 
@@ -55,12 +67,13 @@ class LoginRequest extends FormRequest
 
     /**
      * Ensure the login request is not rate limited.
+     * Caso de uso 13 - extensión 5B: bloqueo tras 3 intentos fallidos.
      *
      * @throws ValidationException
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 3)) {
             return;
         }
 
@@ -69,10 +82,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => 'Bloqueo temporal por intentos fallidos. Intente nuevamente en '.ceil($seconds / 60).' minuto(s).',
         ]);
     }
 
