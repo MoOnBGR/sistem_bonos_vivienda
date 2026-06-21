@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col lg:flex-row">
 
-        <!-- Panel izquierdo: Granate con efecto de manchas translúcidas -->
+        <!-- Panel izquierdo-->
         <div class="hidden lg:flex lg:w-2/5 relative bg-[#550000] items-center justify-center overflow-hidden">
             <div class="absolute -top-10 -left-16 w-72 h-72 bg-[#a64545] opacity-40 rounded-full blur-3xl"></div>
             <div class="absolute bottom-0 -right-10 w-80 h-80 bg-[#7a1e1e] opacity-50 rounded-full blur-3xl"></div>
@@ -40,7 +40,7 @@
                     <x-input-error :messages="$errors->get('password')" class="mt-1" />
                 </div>
 
-
+                <!-- Recordarme -->
                 <label for="remember_me" class="inline-flex items-center pt-2">
                     <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-[#550000] focus:ring-[#550000]" name="remember">
                     <span class="ms-2 text-sm text-gray-500">Recordarme</span>
@@ -60,8 +60,6 @@
                         INGRESAR
                     </button>
                 </div>
-
-                <!-- Recordarme -->
                 
             </form>
         </div>
