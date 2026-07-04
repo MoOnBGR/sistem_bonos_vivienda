@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 // Redirige según rol después del login
@@ -18,7 +18,7 @@ Route::get('/dashboard', function () {
     } else {
         return redirect()->route('cliente.dashboard');
     }
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'cliente.completo'])->name('dashboard');
 
 // Rutas de Funcionario
 Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionario.')->group(function () {
@@ -31,7 +31,7 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
 });
 
 // Rutas de Cliente
-Route::middleware(['auth', 'verified'])->prefix('cliente')->name('cliente.')->group(function () {
+Route::middleware(['auth', 'verified', 'cliente.completo'])->prefix('cliente')->name('cliente.')->group(function () {
     Route::get('/dashboard', function () {
         if (Auth::user()->tipo_usuario !== 'Cliente') {
             abort(403);
@@ -47,5 +47,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::resource('admin/clientes', ClienteController::class);
 });
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/datos-adicionales', [ClienteController::class, 'create'])->name('cliente.datos');
+    Route::post('/datos-adicionales', [ClienteController::class, 'store'])->name('cliente.store');
+});
+
+Route::middleware(['auth', 'cliente.completo'])->group(function () {
+    Route::get('/buscar-cliente', [ClienteController::class, 'buscar'])->name('cliente.buscar');
+}); 
 
 require __DIR__.'/auth.php';

@@ -45,20 +45,25 @@
                     <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-[#550000] focus:ring-[#550000]" name="remember">
                     <span class="ms-2 text-sm text-gray-500">Recordarme</span>
                 </label>
-
-
-                <!-- Olvidaste / Ingresar -->
+                
+                 <div class="flex items-center justify-between pt-2">
+                     <button type="submit"
+                        class="bg-[#550000] hover:bg-[#3d0000] text-white font-semibold tracking-wide px-8 py-2.5 rounded-full transition-colors">
+                        INGRESAR
+                    </button>
+                 </div>
+                
                 <div class="flex items-center justify-between pt-2">
+
+                     <button type="submit"
+                        class="text-sm text-[#550000] hover:underline">
+                        Registrarse
+                    </button>
                     @if (Route::has('password.request'))
                         <a class="text-sm text-[#550000] hover:underline" href="{{ route('password.request') }}">
                             ¿Olvidaste tu contraseña?
                         </a>
                     @endif
-
-                    <button type="submit"
-                        class="bg-[#550000] hover:bg-[#3d0000] text-white font-semibold tracking-wide px-8 py-2.5 rounded-full transition-colors">
-                        INGRESAR
-                    </button>
                 </div>
                 
             </form>

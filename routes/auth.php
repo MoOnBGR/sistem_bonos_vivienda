@@ -6,8 +6,9 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,4 +57,12 @@ Route::middleware('auth')->group(function () {
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+
+        Route::get('/datos-adicionales', [ClienteController::class, 'create'])->name('cliente.datos');
+    Route::post('/datos-adicionales', [ClienteController::class, 'store'])->name('cliente.store');
+
+    Route::get('/mis-datos/editar', [ClienteController::class, 'edit'])->name('cliente.editar');
+    Route::put('/mis-datos/editar', [ClienteController::class, 'update'])->name('cliente.actualizar');
+
+        
 });
