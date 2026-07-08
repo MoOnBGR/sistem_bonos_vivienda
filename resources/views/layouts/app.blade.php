@@ -32,73 +32,10 @@
             <nav class="flex-1 px-3 py-4 space-y-1">
 
                 @if(Auth::user()->tipo_usuario === 'Funcionario')
-                    <!-- Inicio -->
-                    <a href="{{ route('funcionario.dashboard') }}"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
-                                                {{ request()->routeIs('funcionario.dashboard') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
-                        Inicio
-                    </a>
-
-                    <!-- Clientes -->
-                    <a href="#"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Clientes
-                    </a>
-
-
-                    <!-- Expedientes -->
-                    <a href="#"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Expedientes
-                    </a>
-
-                    <!-- Documentos -->
-                    <a href="#"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        Documentos
-                    </a>
-
-                    <!-- Historial -->
-                    <a href="#"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Historial
-                    </a>
-
-                    <!-- Notificaciones -->
-                    <a href="#"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        Notificaciones
-                    </a>
-
-                @else
-                            <!-- Menú Cliente -->
-                            <a href="{{ route('cliente.dashboard') }}"
+                            <!-- Inicio -->
+                            <a href="{{ route('funcionario.dashboard') }}"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
-                                                {{ request()->routeIs('cliente.dashboard') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                                                            {{ request()->routeIs('funcionario.dashboard') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -106,32 +43,95 @@
                                 Inicio
                             </a>
 
+                            <!-- Clientes -->
+                            <a href="{{ route('funcionario.clientes.index') }}"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
+                    {{ request()->routeIs('funcionario.clientes.*') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Clientes
+                            </a>
+
+                            <!-- Expedientes -->
                             <a href="#"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                Mi Trámite
+                                Expedientes
                             </a>
 
+                            <!-- Documentos -->
                             <a href="#"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
-                                Mis Documentos
+                                Documentos
                             </a>
-                            <a href="{{ route('cliente.editar') }}"
-                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
-                    {{ request()->routeIs('cliente.editar') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+
+                            <!-- Historial -->
+                            <a href="#"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                Editar Datos
+                                Historial
                             </a>
+
+                            <!-- Notificaciones -->
+                            <a href="#"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                                Notificaciones
+                            </a>
+
+                @else
+                    <!-- Menú Cliente -->
+                    <a href="{{ route('cliente.dashboard') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
+                                                    {{ request()->routeIs('cliente.dashboard') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        Inicio
+                    </a>
+
+                    <a href="#"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Mi Trámite
+                    </a>
+
+                    <a href="#"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Mis Documentos
+                    </a>
+                    <a href="{{ route('cliente.editar') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
+                        {{ request()->routeIs('cliente.editar') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Editar Datos
+                    </a>
 
 
                 @endif

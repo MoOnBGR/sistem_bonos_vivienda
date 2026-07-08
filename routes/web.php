@@ -30,6 +30,20 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
     })->name('dashboard');
 });
 
+Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionario.')->group(function () {
+    Route::get('/dashboard', function () {
+        if (Auth::user()->tipo_usuario !== 'Funcionario') {
+            abort(403);
+        }
+        return view('funcionario.dashboard');
+    })->name('dashboard');
+
+    Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
+    Route::get('/clientes/{cliente}/editar', [ClienteController::class, 'editFuncionario'])->name('clientes.editar');
+    Route::put('/clientes/{cliente}', [ClienteController::class, 'updateFuncionario'])->name('clientes.actualizar');
+    Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.eliminar');
+});
+
 // Rutas de Cliente
 Route::middleware(['auth', 'verified', 'cliente.completo'])->prefix('cliente')->name('cliente.')->group(function () {
     Route::get('/dashboard', function () {
@@ -45,7 +59,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::resource('admin/clientes', ClienteController::class);
 });
 
 
