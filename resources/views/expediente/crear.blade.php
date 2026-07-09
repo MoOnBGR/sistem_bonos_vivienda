@@ -72,13 +72,13 @@
                 </div>
             </div>
 
-            <!-- Estado inicial -->
+            <!-- Estado inicial (fijo, no editable) -->
             <div class="expediente-form-group">
-                <label for="estado">Estado inicial</label>
-                <select id="estado" name="estado">
-                    <option value="En proceso" selected>En proceso</option>
-                    <option value="Completado">Completado</option>
-                </select>
+                <label>Estado inicial</label>
+                <p class="text-gray-800 font-medium bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                    En proceso
+                </p>
+                <input type="hidden" name="estado" value="En proceso">
             </div>
 
             <div class="flex gap-3 mt-6">

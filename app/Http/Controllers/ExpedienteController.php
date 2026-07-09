@@ -11,8 +11,67 @@ use Illuminate\Http\Request;
 class ExpedienteController extends Controller
 {
     /**
+     * Pantalla de Listado: muestra todos los expedientes con filtros
+     * (cliente, estado, rango de fechas), tal como el prototipo de Figma.
+     */
+    public function index(Request $request)
+{
+    $clienteBuscado = null;
+    $busquedaSinResultados = false;
+
+    if ($request->filled('identificacion')) {
+        $clienteBuscado = Cliente::where('identificacion', $request->identificacion)->first();
+
+        if (!$clienteBuscado) {
+            $busquedaSinResultados = true;
+            $expedientes = collect();
+        } else {
+            $expedientes = Expediente::with(['cliente', 'funcionario'])
+                ->where('Id_Cliente', $clienteBuscado->Id_Cliente)
+                ->orderByDesc('fecha_creacion')
+                ->get();
+        }
+    } else {
+        $query = Expediente::with(['cliente', 'funcionario']);
+
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->estado);
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha_creacion', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha_creacion', '<=', $request->fecha_hasta);
+        }
+
+        $expedientes = $query->orderByDesc('fecha_creacion')->get();
+    }
+
+    return view('expediente.index', compact('expedientes', 'clienteBuscado', 'busquedaSinResultados'));
+}
+
+    /**
+     * Busca un cliente por cédula para iniciar el flujo de "Nuevo expediente"
+     * desde el botón de la pantalla de Listado.
+     */
+    public function buscarParaCrear(Request $request)
+    {
+        $identificacion = $request->input('identificacion');
+
+        $cliente = Cliente::where('identificacion', $identificacion)->first();
+
+        if (!$cliente) {
+            return back()->withErrors(['identificacion' => 'Cliente no encontrado'])->withInput();
+        }
+
+        return redirect()->route('expedientes.crear', $cliente->Id_Cliente);
+    }
+
+    /**
      * Caso de uso 3 (búsqueda previa): pide la cédula para ubicar al cliente
-     * antes de crear/consultar/actualizar/cerrar un expediente.
+     * antes de consultar/actualizar/cerrar un expediente.
      */
     public function buscarPorCedula(Request $request)
     {
@@ -38,19 +97,28 @@ class ExpedienteController extends Controller
         return view('expediente.crear', compact('cliente', 'funcionarios'));
     }
 
-    public function store(ExpedienteRequest $request)
-    {
-        $datos = $request->validated();
-        $datos['fecha_creacion'] = $request->input('fecha_creacion', now());
-        $datos['estado'] = $request->input('estado', 'En proceso');
+public function store(ExpedienteRequest $request)
+{
+    $datos = $request->validated();
+    $datos['fecha_creacion'] = $request->input('fecha_creacion', now());
+    $datos['estado'] = $request->input('estado', 'En proceso');
 
-        Expediente::create($datos);
+    $expediente = Expediente::create($datos);
 
-        return redirect()
-            ->route('expedientes.consultar', $datos['Id_Cliente'])
-            ->with('success', 'Expediente creado exitosamente.');
-    }
+    return redirect()
+        ->route('expedientes.confirmacion', $expediente->id_expediente)
+        ->with('success', 'Expediente creado exitosamente.');
+}
 
+/**
+ * Pantalla de confirmación tras crear un expediente.
+ */
+public function confirmacion(Expediente $expediente)
+{
+    $expediente->load('cliente');
+
+    return view('expediente.confirmacionCreacionExpediente', compact('expediente'));
+}
     /**
      * Caso de uso 6: Consultar expediente
      */
