@@ -1,0 +1,108 @@
+/* ============================================
+   Estilos del módulo de Expedientes
+   ============================================ */
+
+.expediente-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.expediente-titulo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #550000;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #550000;
+    padding-bottom: 0.5rem;
+}
+
+.expediente-form-group {
+    margin-bottom: 1.25rem;
+}
+
+.expediente-form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.35rem;
+}
+
+.expediente-form-group input,
+.expediente-form-group select {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.expediente-form-group input:focus,
+.expediente-form-group select:focus {
+    outline: none;
+    border-color: #550000;
+    box-shadow: 0 0 0 3px rgba(85, 0, 0, 0.1);
+}
+
+.expediente-btn {
+    display: inline-block;
+    padding: 0.65rem 1.5rem;
+    background-color: #550000;
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.expediente-btn:hover {
+    background-color: #3d0000;
+}
+
+.expediente-btn-secundario {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+.expediente-btn-secundario:hover {
+    background-color: #d1d5db;
+}
+
+.expediente-estado {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.expediente-estado.en-proceso {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.expediente-estado.completado {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.expediente-mensaje-exito {
+    padding: 0.85rem 1rem;
+    background-color: #d1fae5;
+    color: #065f46;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.expediente-mensaje-error {
+    padding: 0.85rem 1rem;
+    background-color: #fee2e2;
+    color: #991b1b;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}

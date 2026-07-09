@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\ExpedienteController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,6 +29,33 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
         }
         return view('funcionario.dashboard');
     })->name('dashboard');
+});
+
+// Rutas de Expediente
+Route::get('/expedientes', [ExpedienteController::class, 'index'])
+    ->name('expedientes.index');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/expedientes/buscar', [ExpedienteController::class, 'buscarPorCedula'])
+        ->name('expedientes.buscar');
+
+    Route::get('/expedientes/crear/{cliente}', [ExpedienteController::class, 'create'])
+        ->name('expedientes.crear');
+
+    Route::post('/expedientes', [ExpedienteController::class, 'store'])
+        ->name('expedientes.store');
+
+    Route::get('/expedientes/cliente/{cliente}', [ExpedienteController::class, 'consultarPorCliente'])
+        ->name('expedientes.consultar');
+
+    Route::get('/expedientes/{expediente}/editar', [ExpedienteController::class, 'edit'])
+        ->name('expedientes.editar');
+
+    Route::put('/expedientes/{expediente}', [ExpedienteController::class, 'update'])
+        ->name('expedientes.update');
+
+    Route::post('/expedientes/{expediente}/cerrar', [ExpedienteController::class, 'cerrar'])
+        ->name('expedientes.cerrar');
 });
 
 // Rutas de Cliente
