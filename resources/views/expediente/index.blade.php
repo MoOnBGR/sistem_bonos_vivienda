@@ -6,23 +6,16 @@
     </x-slot>
 
     <div class="expediente-container">
-
-        <!-- Pestañas de navegación -->
-        <div class="flex gap-2 mb-6 border-b border-gray-200 pb-4">
-            <span class="px-4 py-2 rounded-lg text-sm font-medium bg-[#550000] text-white">
-                Listado
-            </span>
-            <a href="{{ route('expedientes.crear.buscar') }}"
-               class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
-                Crear
-            </a>
-            <span class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-400">
-                Actualizar
-            </span>
-            <span class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-400">
-                Cerrar
-            </span>
-        </div>
+<!-- Pestañas de navegación -->
+<div class="flex gap-2 mb-6 border-b border-gray-200 pb-4">
+    <span class="px-4 py-2 rounded-lg text-sm font-medium bg-[#550000] text-white">
+        Listado
+    </span>
+    <a href="{{ route('expedientes.crear.buscar') }}"
+       class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
+        Crear
+    </a>
+</div>
 
         <h3 class="expediente-titulo">Expedientes</h3>
 
@@ -34,22 +27,19 @@
             <div class="expediente-mensaje-error">{{ session('error') }}</div>
         @endif
 
-        <!-- Búsqueda rápida: filtra el listado por cédula de un cliente -->
-        <form method="GET" action="{{ route('expedientes.index') }}" class="flex gap-2 mb-2 items-end">
+        <!-- Búsqueda rápida: ir directo al expediente de un cliente -->
+        <form method="POST" action="{{ route('expedientes.buscar') }}" class="flex gap-2 mb-2 items-end">
+            @csrf
             <div class="expediente-form-group mb-0">
                 <label>Buscar expediente por cédula</label>
-                <input type="text" name="identificacion" value="{{ request('identificacion') }}" placeholder="Cédula del cliente..." class="w-64">
+                <input type="text" name="identificacion" placeholder="Cédula del cliente..." class="w-64">
             </div>
             <button type="submit" class="text-[#550000] font-medium hover:underline bg-transparent mb-2">Buscar</button>
         </form>
 
-        @if ($busquedaSinResultados)
-            <div class="expediente-mensaje-error mb-2">Cliente no encontrado</div>
+        @if ($errors->has('identificacion'))
+            <div class="expediente-mensaje-error mb-2">{{ $errors->first('identificacion') }}</div>
             <p class="text-gray-500 mb-6">No hay registros de expedientes con esa cédula. Dale clic en "Filtrar" para ver todos nuevamente.</p>
-        @elseif ($clienteBuscado)
-            <div class="expediente-mensaje-exito mb-6">
-                El cliente {{ $clienteBuscado->nombre }} {{ $clienteBuscado->apellidos }} tiene {{ $expedientes->count() }} expediente(s) asociado(s). Dale clic en "Filtrar" para ver todos los expedientes nuevamente.
-            </div>
         @endif
 
         <!-- Filtros -->
@@ -79,7 +69,7 @@
             </div>
         </form>
 
-        @unless ($busquedaSinResultados)
+        @unless ($errors->has('identificacion'))
         <!-- Tabla de expedientes -->
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
