@@ -21,7 +21,7 @@ return new class extends Migration
 
             $table->date('fecha_creacion')->default(now());
 
-            $table->enum('estado', ['En proceso', 'Completado'])
+            $table->enum('estado', ['En proceso', 'Completado', 'Inactivo'])
                 ->default('En proceso');
 
             $table->timestamps();

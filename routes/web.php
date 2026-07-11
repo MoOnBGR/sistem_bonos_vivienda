@@ -5,6 +5,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ExpedienteController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\ExpedienteCarpetaController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -39,6 +40,14 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
     Route::put('/clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.actualizar');
     Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
 });
+
+
+//Rutas de Carpeta dentro de Expediente
+
+Route::get('/expedientes/{expediente}/carpetas/{carpeta?}', [ExpedienteCarpetaController::class, 'index'])->name('expedientes.carpetas.index');
+Route::post('/expedientes/{expediente}/carpetas', [ExpedienteCarpetaController::class, 'store'])->name('expedientes.carpetas.store');
+Route::put('/expedientes/carpetas/{carpeta}', [ExpedienteCarpetaController::class, 'update'])->name('expedientes.carpetas.update');
+Route::delete('/expedientes/carpetas/{carpeta}', [ExpedienteCarpetaController::class, 'destroy'])->name('expedientes.carpetas.destroy');
 
 // Rutas de Expediente
 
@@ -75,6 +84,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/expedientes/{expediente}/cerrar', [ExpedienteController::class, 'cerrar'])
         ->name('expedientes.cerrar');
+
+    Route::post('/expedientes/{expediente}/reabrir', [ExpedienteController::class, 'reabrir'])
+        ->name('expedientes.reabrir');
 });
 
 // Rutas de Cliente
@@ -102,6 +114,6 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'cliente.completo'])->group(function () {
     Route::get('/buscar-cliente', [ClienteController::class, 'buscar'])->name('cliente.buscar');
-}); 
+});
 
 require __DIR__.'/auth.php';

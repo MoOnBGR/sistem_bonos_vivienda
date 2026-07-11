@@ -6,21 +6,21 @@
     </x-slot>
 
     <div class="expediente-container">
-        
-<!-- Pestañas de navegación -->
-<div class="flex gap-2 mb-6 border-b border-gray-200 pb-4">
-    <a href="{{ route('expedientes.index') }}"
-       class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
-        Listado
-    </a>
-    <a href="{{ route('expedientes.consultar', $expediente->Id_Cliente) }}"
-       class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
-        Ver
-    </a>
-    <span class="px-4 py-2 rounded-lg text-sm font-medium bg-[#550000] text-white">
-        Actualizar
-    </span>
-</div>
+
+        <!-- Pestañas de navegación -->
+        <div class="flex gap-2 mb-6 border-b border-gray-200 pb-4">
+            <a href="{{ route('expedientes.index') }}"
+               class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
+                Listado
+            </a>
+            <a href="{{ route('expedientes.consultar', $expediente->Id_Cliente) }}"
+               class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
+                Ver
+            </a>
+            <span class="px-4 py-2 rounded-lg text-sm font-medium bg-[#550000] text-white">
+                Actualizar
+            </span>
+        </div>
 
         <h3 class="expediente-titulo">
             EXP-{{ str_pad($expediente->id_expediente, 4, '0', STR_PAD_LEFT) }} ·
@@ -29,6 +29,14 @@
         <p class="text-sm text-gray-500 -mt-3 mb-4">
             Editando información del expediente
         </p>
+
+        @if (session('success'))
+            <div class="expediente-mensaje-exito">{{ session('success') }}</div>
+        @endif
+
+        @if (session('error'))
+            <div class="expediente-mensaje-error">{{ session('error') }}</div>
+        @endif
 
         @if ($errors->any())
             <div class="expediente-mensaje-error">
@@ -101,12 +109,12 @@
         <!-- Separador -->
         <hr class="my-6 border-gray-200">
 
-        <!-- Cerrar expediente (acción independiente) -->
-        @if ($expediente->estado !== 'Completado')
+        @if ($expediente->estado !== 'Inactivo')
+            <!-- Cerrar expediente (acción independiente) -->
             <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                 <h4 class="font-semibold text-red-800 mb-1">Cerrar expediente</h4>
                 <p class="text-sm text-red-700 mb-3">
-                    Esta acción marcará el expediente como "Completado". Podrás seguir consultándolo, pero no se podrán
+                    Esta acción marcará el expediente como "Inactivo". Podrás seguir consultándolo, pero no se podrán
                     hacer más cambios.
                 </p>
                 <form method="POST" action="{{ route('expedientes.cerrar', $expediente->id_expediente) }}"
@@ -118,8 +126,19 @@
                 </form>
             </div>
         @else
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-700">
-                Este expediente ya se encuentra cerrado.
+            <!-- Reabrir expediente -->
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 class="font-semibold text-green-800 mb-1">Expediente cerrado</h4>
+                <p class="text-sm text-green-700 mb-3">
+                    Este expediente se encuentra cerrado. Si fue un error, puedes reabrirlo aquí (volverá al estado "En proceso").
+                </p>
+                <form method="POST" action="{{ route('expedientes.reabrir', $expediente->id_expediente) }}"
+                      onsubmit="return confirm('¿Reabrir este expediente?');">
+                    @csrf
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg">
+                        Reabrir expediente
+                    </button>
+                </form>
             </div>
         @endif
     </div>

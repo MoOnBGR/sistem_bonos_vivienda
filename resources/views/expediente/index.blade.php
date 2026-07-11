@@ -50,6 +50,7 @@
                     <option value="">Todos</option>
                     <option value="En proceso" {{ request('estado') === 'En proceso' ? 'selected' : '' }}>En proceso</option>
                     <option value="Completado" {{ request('estado') === 'Completado' ? 'selected' : '' }}>Completado</option>
+                    <option value="Inactivo" {{ request('estado') === 'Inactivo' ? 'selected' : '' }}>Inactivo</option>
                 </select>
             </div>
 
@@ -91,12 +92,12 @@
                             <td class="py-3 pr-4">{{ \Carbon\Carbon::parse($expediente->fecha_creacion)->format('d/m/Y') }}</td>
                             <td class="py-3 pr-4">{{ $expediente->funcionario->name }}</td>
                             <td class="py-3 pr-4">
-                                <span class="expediente-estado {{ $expediente->estado === 'Completado' ? 'completado' : 'en-proceso' }}">
+                                <span class="expediente-estado {{ $expediente->estado === 'En proceso' ? 'en-proceso' : 'completado' }}">
                                     {{ $expediente->estado }}
                                 </span>
                             </td>
                             <td class="py-3 pr-4 text-right space-x-2">
-                                <a href="{{ route('expedientes.consultar', $expediente->Id_Cliente) }}"
+                                <a href="{{ route('expedientes.carpetas.index', $expediente->id_expediente) }}"
                                    class="text-[#550000] font-medium hover:underline">Ver</a>
                                 <a href="{{ route('expedientes.editar', $expediente->id_expediente) }}"
                                    class="text-[#550000] font-medium hover:underline">Editar</a>
