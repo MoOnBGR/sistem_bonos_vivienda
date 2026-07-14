@@ -6,6 +6,7 @@ use App\Http\Controllers\ExpedienteController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ExpedienteCarpetaController;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -30,6 +31,31 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
         }
         return view('funcionario.dashboard');
     })->name('dashboard');
+    Route::get('/crear-funcionario', function () {
+    if (Auth::user()->tipo_usuario !== 'Funcionario') {
+        abort(403);
+    }
+    return view('funcionario.crear_funcionario');
+    })->name('crear');
+    Route::post('/crear-funcionario', function (Request $request) {
+    if (Auth::user()->tipo_usuario !== 'Funcionario') {
+        abort(403);
+    }
+    $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+        'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
+    ]);
+
+    \App\Models\User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+        'tipo_usuario' => 'Funcionario',
+    ]);
+
+    return back()->with('success', '¡Funcionario creado exitosamente!');
+    })->name('funcionarios.store');
 
     // Rutas de Clientes (nombradas en español para que coincidan con las vistas de Monse)
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');

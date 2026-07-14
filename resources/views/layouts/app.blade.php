@@ -55,8 +55,9 @@
                             </a>
 
                             <!-- Expedientes -->
-                            <a href="#"
-                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
+                            <a href="{{ route('expedientes.index') }}"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
+                                {{ request()->routeIs('expedientes.*') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -92,6 +93,17 @@
                                         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                 </svg>
                                 Notificaciones
+                            </a>
+
+                                                        <!-- Crear Funcionario -->
+                            <a href="{{ route('funcionario.crear') }}"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
+                                {{ request()->routeIs('funcionario.crear') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                </svg>
+                                Crear Funcionario
                             </a>
 
                 @else
