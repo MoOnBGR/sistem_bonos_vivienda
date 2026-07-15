@@ -57,14 +57,14 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
     return back()->with('success', '¡Funcionario creado exitosamente!');
     })->name('funcionarios.store');
 
-    // Rutas de Clientes (nombradas en español para que coincidan con las vistas de Monse)
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
     Route::get('/clientes/crear', [ClienteController::class, 'create'])->name('clientes.crear');
     Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
     Route::get('/clientes/{cliente}', [ClienteController::class, 'show'])->name('clientes.show');
-    Route::get('/clientes/{cliente}/editar', [ClienteController::class, 'edit'])->name('clientes.editar');
-    Route::put('/clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.actualizar');
+    Route::get('/clientes/{cliente}/editar', [ClienteController::class, 'editFuncionario'])->name('clientes.editar');
+    Route::put('/clientes/{cliente}', [ClienteController::class, 'updateFuncionario'])->name('clientes.actualizar');
     Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
+
 });
 
 

@@ -21,4 +21,11 @@ class Cliente extends Model
     {
         return $this->belongsTo(User::class, 'Id_user');
     }
+
+        public function documentosRequeridosAsignados()
+    {
+        return $this->hasMany(ClienteDocumentoRequerido::class, 'Id_Cliente', 'Id_Cliente');
+    }
+
+
 }
