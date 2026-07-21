@@ -131,6 +131,11 @@ Route::middleware(['auth', 'verified', 'cliente.completo'])->prefix('cliente')->
         }
         return view('cliente.dashboard');
     })->name('dashboard');
+    // ==========================================
+        // DOCUMENTOS - CLIENTE (Naraly)
+        // ==========================================
+        Route::get('/documentos', [DocumentoController::class, 'misDocumentos'])
+            ->name('documentos');
 });
 
 // Perfil
