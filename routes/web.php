@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ExpedienteController;
+use App\Http\Controllers\DocumentoController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ExpedienteCarpetaController;
@@ -113,6 +114,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/expedientes/{expediente}/reabrir', [ExpedienteController::class, 'reabrir'])
         ->name('expedientes.reabrir');
+    
+    // ==========================================
+    // MÓDULO DE DOCUMENTOS - Naraly
+    // ==========================================
+    Route::resource('documentos', DocumentoController::class);
+    Route::patch('documentos/{id}/validar', [DocumentoController::class, 'update'])
+         ->name('documentos.validar');   
 });
 
 // Rutas de Cliente
