@@ -66,6 +66,11 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
     Route::put('/clientes/{cliente}', [ClienteController::class, 'updateFuncionario'])->name('clientes.actualizar');
     Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
 
+        // Documentos - Funcionario
+    Route::get('/documentos/cliente', [DocumentoController::class, 'buscarCliente'])->name('documentos.buscar');
+    Route::get('/documentos/subir/{id_expediente}', [DocumentoController::class, 'subirDocumentoEmpresa'])->name('documentos.subir');
+    Route::post('/documentos/subir-empresa', [DocumentoController::class, 'storeDocumentoEmpresa'])->name('documentos.subir-empresa');
+
 });
 
 
@@ -118,9 +123,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ==========================================
     // MÓDULO DE DOCUMENTOS - Naraly
     // ==========================================
+
+    // 1. PRIMERO: Rutas específicas (las que no son CRUD)
+    Route::get('/documentos/requerir/{id_expediente}', [DocumentoController::class, 'mostrarRequerir'])
+        ->name('documentos.requerir');
+
+    Route::post('/documentos/requerir', [DocumentoController::class, 'requerirDocumento'])
+        ->name('documentos.requerir.post');
+
+    Route::patch('/documentos/{id}/validar', [DocumentoController::class, 'update'])
+        ->name('documentos.validar');
+
+    // 2. DESPUÉS: Resource (el CRUD)
     Route::resource('documentos', DocumentoController::class);
-    Route::patch('documentos/{id}/validar', [DocumentoController::class, 'update'])
-         ->name('documentos.validar');   
 });
 
 // Rutas de Cliente
@@ -131,11 +146,9 @@ Route::middleware(['auth', 'verified', 'cliente.completo'])->prefix('cliente')->
         }
         return view('cliente.dashboard');
     })->name('dashboard');
-    // ==========================================
-        // DOCUMENTOS - CLIENTE (Naraly)
-        // ==========================================
-        Route::get('/documentos', [DocumentoController::class, 'misDocumentos'])
-            ->name('documentos');
+        // Documentos - Cliente
+    Route::get('/documentos', [DocumentoController::class, 'misDocumentos'])->name('documentos');
+    Route::post('/documentos/subir', [DocumentoController::class, 'subirDocumentoCliente'])->name('documentos.subir');
 });
 
 // Perfil

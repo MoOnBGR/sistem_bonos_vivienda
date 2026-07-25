@@ -75,7 +75,7 @@
                                 </svg>
                                 Documentos
                             </a>
-
+                            
                             <!-- Historial -->
                             <a href="#"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-white/70 hover:bg-white/10 hover:text-white">
