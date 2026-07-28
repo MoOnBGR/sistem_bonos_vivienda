@@ -124,7 +124,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // MÓDULO DE DOCUMENTOS - Naraly
     // ==========================================
 
-    // 1. PRIMERO: Rutas específicas (las que no son CRUD)
+   // 1. PRIMERO: Rutas específicas (las que no son CRUD)
     Route::get('/documentos/requerir/{id_expediente}', [DocumentoController::class, 'mostrarRequerir'])
         ->name('documentos.requerir');
 
@@ -136,6 +136,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // 2. DESPUÉS: Resource (el CRUD)
     Route::resource('documentos', DocumentoController::class);
+
+    // 3. Eliminar solicitud de documento
+    Route::delete('/documentos/solicitud/{id}', [DocumentoController::class, 'eliminarSolicitud'])
+        ->name('documentos.solicitud.destroy');
 });
 
 // Rutas de Cliente
@@ -149,6 +153,8 @@ Route::middleware(['auth', 'verified', 'cliente.completo'])->prefix('cliente')->
         // Documentos - Cliente
     Route::get('/documentos', [DocumentoController::class, 'misDocumentos'])->name('documentos');
     Route::post('/documentos/subir', [DocumentoController::class, 'subirDocumentoCliente'])->name('documentos.subir');
+    Route::delete('/documentos/eliminar/{id}', [DocumentoController::class, 'eliminarDocumentoCliente'])
+    ->name('documentos.eliminar');
 });
 
 // Perfil

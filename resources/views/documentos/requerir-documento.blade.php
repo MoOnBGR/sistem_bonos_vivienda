@@ -7,7 +7,6 @@
 
     <div class="expediente-container">
 
-        <!-- Pestañas de navegación -->
         <div class="flex gap-2 mb-6 border-b border-gray-200 pb-4">
             <a href="{{ route('expedientes.index') }}"
                class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
@@ -20,14 +19,12 @@
 
         <h3 class="expediente-titulo">Requerir Documentos al Cliente</h3>
 
-        {{-- Mensaje de éxito --}}
         @if (session('success'))
             <div class="expediente-mensaje-exito">
                 {{ session('success') }}
             </div>
         @endif
 
-        {{-- Mensajes de error --}}
         @if ($errors->any())
             <div class="expediente-mensaje-error">
                 <ul class="list-disc list-inside">
@@ -38,7 +35,6 @@
             </div>
         @endif
 
-        {{-- Información del expediente --}}
         <div class="bg-gray-50 p-4 rounded-lg mb-6">
             <p class="text-sm text-gray-600">
                 <strong>Expediente #:</strong> {{ $expediente->id_expediente ?? 'N/A' }}
@@ -52,18 +48,14 @@
             </p>
         </div>
 
-        {{-- Formulario para requerir documentos --}}
         <form action="{{ route('documentos.requerir.post') }}" method="POST">
             @csrf
             
-            {{-- ID del expediente --}}
             <input type="hidden" name="id_expediente" value="{{ $expediente->id_expediente ?? '' }}">
 
-            {{-- Lista de documentos predefinidos con checkboxes --}}
             <div class="space-y-4">
                 <p class="font-semibold text-gray-700">Seleccione los documentos a requerir:</p>
 
-                {{-- Documento 1 --}}
                 <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
                     <div class="flex items-start">
                         <input type="checkbox" 
@@ -78,7 +70,6 @@
                     </div>
                 </div>
 
-                {{-- Documento 2 --}}
                 <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
                     <div class="flex items-start">
                         <input type="checkbox" 
@@ -93,7 +84,6 @@
                     </div>
                 </div>
 
-                {{-- Documento 3 --}}
                 <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
                     <div class="flex items-start">
                         <input type="checkbox" 
@@ -108,7 +98,6 @@
                     </div>
                 </div>
 
-                {{-- Documento 4 --}}
                 <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
                     <div class="flex items-start">
                         <input type="checkbox" 
@@ -123,7 +112,6 @@
                     </div>
                 </div>
 
-                {{-- Documento 5 --}}
                 <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
                     <div class="flex items-start">
                         <input type="checkbox" 
@@ -138,7 +126,6 @@
                     </div>
                 </div>
 
-                {{-- Documento 6 --}}
                 <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
                     <div class="flex items-start">
                         <input type="checkbox" 
@@ -153,7 +140,6 @@
                     </div>
                 </div>
 
-                {{-- Documento 7 --}}
                 <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
                     <div class="flex items-start">
                         <input type="checkbox" 
@@ -169,10 +155,9 @@
                 </div>
             </div>
 
-            {{-- Campo para descripción adicional (opcional) --}}
             <div class="mt-6">
                 <label for="descripcion_adicional" class="block text-sm font-medium text-gray-700 mb-1">
-                    Descripción adicional (opcional)
+                    Descripcion adicional (opcional)
                 </label>
                 <textarea name="descripcion_adicional" 
                           id="descripcion_adicional" 
@@ -181,19 +166,18 @@
                           placeholder="Comentarios adicionales sobre los documentos requeridos...">{{ old('descripcion_adicional') }}</textarea>
             </div>
 
-            {{-- Botones --}}
             <div class="flex items-center justify-between mt-6">
-                <button type="submit" class="expediente-btn">
+                <button type="submit" class="bg-[#550000] hover:bg-[#6d0000] text-white px-6 py-2 rounded-lg transition font-medium">
                     Requerir Documentos Seleccionados
                 </button>
-                <a href="{{ route('expedientes.carpetas.index', $expediente->id_expediente) }}" class="text-gray-600 hover:text-gray-800 transition">
+                <a href="{{ route('funcionario.documentos.buscar', ['cedula' => $cedula ?? '']) }}" 
+                   class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg transition text-sm">
                     Cancelar
                 </a>
             </div>
         </form>
     </div>
 
-    {{-- Script para contar documentos seleccionados --}}
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
