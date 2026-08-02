@@ -10,10 +10,6 @@ use Illuminate\Http\Request;
 
 class ExpedienteController extends Controller
 {
-    /**
-     * Pantalla de Listado: muestra todos los expedientes con filtros
-     * (cliente, estado, rango de fechas), tal como el prototipo de Figma.
-     */
     public function index(Request $request)
     {
         $clienteBuscado = null;
@@ -54,10 +50,6 @@ class ExpedienteController extends Controller
         return view('expediente.index', compact('expedientes', 'clienteBuscado', 'busquedaSinResultados'));
     }
 
-    /**
-     * Busca un cliente por cédula para iniciar el flujo de "Nuevo expediente"
-     * desde el botón de la pantalla de Listado.
-     */
     public function buscarParaCrear(Request $request)
     {
         $identificacion = $request->input('identificacion');
@@ -77,10 +69,6 @@ class ExpedienteController extends Controller
         return redirect()->route('expedientes.crear', $cliente->Id_Cliente);
     }
 
-    /**
-     * Caso de uso 3 (búsqueda previa): pide la cédula para ubicar al cliente
-     * antes de consultar/actualizar/cerrar un expediente.
-     */
     public function buscarPorCedula(Request $request)
     {
         $identificacion = $request->input('identificacion');
@@ -91,13 +79,9 @@ class ExpedienteController extends Controller
             return back()->withErrors(['identificacion' => 'Cliente no encontrado']);
         }
 
-        return redirect()
-            ->route('expedientes.consultar', $cliente->Id_Cliente);
+        return redirect()->route('expedientes.consultar', $cliente->Id_Cliente);
     }
 
-    /**
-     * Caso de uso 4: Crear Expediente
-     */
     public function create(Cliente $cliente)
     {
         $funcionarios = User::where('tipo_usuario', 'Funcionario')->get();
@@ -120,14 +104,19 @@ class ExpedienteController extends Controller
 
         $expediente = Expediente::create($datos);
 
+        $cliente = Cliente::find($datos['Id_Cliente']);
+        \App\Helpers\Historial::registrar(
+            'Expedientes',
+            'Crear',
+            'Se creó el expediente EXP-' . str_pad($expediente->id_expediente, 4, '0', STR_PAD_LEFT) . ' para el cliente: ' . ($cliente->nombre ?? '') . ' ' . ($cliente->apellidos ?? ''),
+            $expediente->id_expediente
+        );
+
         return redirect()
             ->route('expedientes.confirmacion', $expediente->id_expediente)
             ->with('success', 'Expediente creado exitosamente.');
     }
 
-    /**
-     * Pantalla de confirmación tras crear un expediente.
-     */
     public function confirmacion(Expediente $expediente)
     {
         $expediente->load('cliente');
@@ -135,9 +124,6 @@ class ExpedienteController extends Controller
         return view('expediente.confirmacionCreacionExpediente', compact('expediente'));
     }
 
-    /**
-     * Caso de uso 6: Consultar expediente (ahora redirige a la vista de carpetas)
-     */
     public function consultarPorCliente(Cliente $cliente)
     {
         $expediente = Expediente::where('Id_Cliente', $cliente->Id_Cliente)->first();
@@ -149,9 +135,6 @@ class ExpedienteController extends Controller
         return redirect()->route('expedientes.carpetas.index', $expediente->id_expediente);
     }
 
-    /**
-     * Caso de uso 5: Actualizar expediente
-     */
     public function edit(Expediente $expediente)
     {
         $funcionarios = User::where('tipo_usuario', 'Funcionario')->get();
@@ -163,14 +146,18 @@ class ExpedienteController extends Controller
     {
         $expediente->update($request->validated());
 
+        \App\Helpers\Historial::registrar(
+            'Expedientes',
+            'Actualizar',
+            'Se actualizó el expediente EXP-' . str_pad($expediente->id_expediente, 4, '0', STR_PAD_LEFT) . ' del cliente: ' . ($expediente->cliente->nombre ?? '') . ' ' . ($expediente->cliente->apellidos ?? ''),
+            $expediente->id_expediente
+        );
+
         return redirect()
             ->route('expedientes.consultar', $expediente->Id_Cliente)
             ->with('success', 'Expediente actualizado correctamente.');
     }
 
-    /**
-     * Caso de uso 7: Cerrar expediente
-     */
     public function cerrar(Expediente $expediente)
     {
         if ($expediente->estado === 'Inactivo') {
@@ -179,14 +166,18 @@ class ExpedienteController extends Controller
 
         $expediente->update(['estado' => 'Inactivo']);
 
+        \App\Helpers\Historial::registrar(
+            'Expedientes',
+            'Cerrar',
+            'Se cerró el expediente EXP-' . str_pad($expediente->id_expediente, 4, '0', STR_PAD_LEFT) . ' del cliente: ' . ($expediente->cliente->nombre ?? '') . ' ' . ($expediente->cliente->apellidos ?? ''),
+            $expediente->id_expediente
+        );
+
         return redirect()
             ->route('expedientes.consultar', $expediente->Id_Cliente)
             ->with('success', 'Expediente cerrado correctamente.');
     }
 
-    /**
-     * Reabrir un expediente que estaba cerrado (Inactivo).
-     */
     public function reabrir(Expediente $expediente)
     {
         if ($expediente->estado !== 'Inactivo') {
@@ -194,6 +185,13 @@ class ExpedienteController extends Controller
         }
 
         $expediente->update(['estado' => 'En proceso']);
+
+        \App\Helpers\Historial::registrar(
+            'Expedientes',
+            'Reabrir',
+            'Se reabrio el expediente EXP-' . str_pad($expediente->id_expediente, 4, '0', STR_PAD_LEFT) . ' del cliente: ' . ($expediente->cliente->nombre ?? '') . ' ' . ($expediente->cliente->apellidos ?? ''),
+            $expediente->id_expediente
+        );
 
         return redirect()
             ->route('expedientes.consultar', $expediente->Id_Cliente)

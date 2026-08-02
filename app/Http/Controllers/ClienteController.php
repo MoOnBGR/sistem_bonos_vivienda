@@ -33,6 +33,8 @@ class ClienteController extends Controller
         $validated['estado'] = 'Activo';
  
         Cliente::create($validated);
+
+        \App\Helpers\Historial::registrar('Clientes', 'Crear', 'Se registró el cliente: ' . $validated['nombre'] . ' ' . $validated['apellidos']);
  
         return redirect()->route('dashboard');
     }
@@ -79,9 +81,12 @@ class ClienteController extends Controller
         ]);
  
         $cliente->update($validated);
+
+        \App\Helpers\Historial::registrar('Clientes', 'Actualizar', 'El cliente actualizó sus datos: ' . $cliente->nombre . ' ' . $cliente->apellidos, $cliente->Id_Cliente);
  
         return redirect()->route('cliente.dashboard')->with('status', 'Datos actualizados correctamente.');
     }
+
     public function index(Request $request)
     {
         if (auth()->user()->tipo_usuario !== 'Funcionario') {
@@ -111,16 +116,13 @@ class ClienteController extends Controller
             abort(403);
         }
  
-        // Full catalog of possible required documents, in display order.
         $documentosCatalogo = DocumentoRequerido::orderBy('orden')->orderBy('nombre')->get();
  
-        // Catalog document IDs already assigned to this cliente.
         $documentosSeleccionados = $cliente->documentosRequeridosAsignados()
             ->whereNotNull('Id_DocumentoRequerido')
             ->pluck('Id_DocumentoRequerido')
             ->toArray();
  
-        // Custom "Otros" documents already assigned to this cliente.
         $otrosDocumentos = $cliente->documentosRequeridosAsignados()
             ->whereNull('Id_DocumentoRequerido')
             ->pluck('nombre_personalizado')
@@ -156,6 +158,8 @@ class ClienteController extends Controller
  
         $datosCliente = collect($validated)->except(['documentos', 'otros'])->toArray();
         $cliente->update($datosCliente);
+
+        \App\Helpers\Historial::registrar('Clientes', 'Actualizar', 'Funcionario actualizó el cliente: ' . $cliente->nombre . ' ' . $cliente->apellidos, $cliente->Id_Cliente);
  
         $this->sincronizarDocumentos(
             $cliente,
@@ -166,11 +170,9 @@ class ClienteController extends Controller
         return redirect()->route('funcionario.clientes.index')->with('status', 'Cliente actualizado correctamente.');
     }
  
-   
     protected function sincronizarDocumentos(Cliente $cliente, array $idsDocumentosCatalogo, array $nombresOtros): void
     {
         DB::transaction(function () use ($cliente, $idsDocumentosCatalogo, $nombresOtros) {
-          
             $cliente->documentosRequeridosAsignados()->whereNotNull('Id_DocumentoRequerido')->delete();
  
             foreach (array_unique($idsDocumentosCatalogo) as $idDocumento) {
@@ -179,7 +181,6 @@ class ClienteController extends Controller
                 ]);
             }
  
-            
             $cliente->documentosRequeridosAsignados()->whereNull('Id_DocumentoRequerido')->delete();
  
             $nombresOtros = array_values(array_unique(array_filter(
@@ -199,10 +200,14 @@ class ClienteController extends Controller
         if (auth()->user()->tipo_usuario !== 'Funcionario') {
             abort(403);
         }
- 
+
+        $nombre = $cliente->nombre . ' ' . $cliente->apellidos;
+        $id = $cliente->Id_Cliente;
+
         $cliente->delete();
+
+        \App\Helpers\Historial::registrar('Clientes', 'Eliminar', 'Se eliminó el cliente: ' . $nombre, $id);
  
         return redirect()->route('funcionario.clientes.index')->with('status', 'Cliente eliminado correctamente.');
     }
- 
 }

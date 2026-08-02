@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\DocumentoController;
+use App\Http\Controllers\HistorialController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ExpedienteCarpetaController;
@@ -70,6 +71,8 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
     Route::get('/documentos/cliente', [DocumentoController::class, 'buscarCliente'])->name('documentos.buscar');
     Route::get('/documentos/subir/{id_expediente}', [DocumentoController::class, 'subirDocumentoEmpresa'])->name('documentos.subir');
     Route::post('/documentos/subir-empresa', [DocumentoController::class, 'storeDocumentoEmpresa'])->name('documentos.subir-empresa');
+
+    Route::get('/historial', [HistorialController::class, 'index'])->name('historial.index');
 
 });
 

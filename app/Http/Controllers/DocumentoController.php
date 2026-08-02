@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Storage;
 
 class DocumentoController extends Controller
 {
-    // ==========================================
-    // 1. LISTAR DOCUMENTOS (INDEX)
-    // ==========================================
     public function index()
     {
         $documentos = Documento::with(['expediente.cliente'])
@@ -21,9 +18,6 @@ class DocumentoController extends Controller
         return view('documentos.index', compact('documentos'));
     }
 
-    // ==========================================
-    // 2. MOSTRAR FORMULARIO PARA SUBIR (CREATE)
-    // ==========================================
     public function create(Request $request)
     {
         $expedientes = Expediente::with('cliente')
@@ -36,9 +30,6 @@ class DocumentoController extends Controller
         return view('documentos.create', compact('expedientes', 'expedienteId', 'cedula'));
     }
 
-    // ==========================================
-    // 3. GUARDAR DOCUMENTO (STORE)
-    // ==========================================
     public function store(Request $request)
     {
         $request->validate([
@@ -67,7 +58,6 @@ class DocumentoController extends Controller
         }
 
         $path = $request->file('archivo')->store('documentos', 'public');
-
         $estado = auth()->user()->tipo_usuario == 'Funcionario' ? 'Validado' : 'Pendiente';
 
         Documento::create([
@@ -81,24 +71,24 @@ class DocumentoController extends Controller
             'es_duplicado' => $existe,
         ]);
 
-        // ✅ REDIRIGIR A LA BÚSQUEDA DEL CLIENTE
+        \App\Helpers\Historial::registrar(
+            'Documentos',
+            'Subir',
+            'Se subió el documento: ' . $request->nombre_doc . ' al expediente #' . $request->id_expediente,
+            $request->id_expediente
+        );
+
         $cedula = $request->input('cedula') ?? $request->query('cedula') ?? '';
         return redirect()->route('funcionario.documentos.buscar', ['cedula' => $cedula])
                 ->with('success', 'Documento subido exitosamente.');
     }
 
-    // ==========================================
-    // 4. VER UN DOCUMENTO (SHOW)
-    // ==========================================
     public function show($id)
     {
         $documento = Documento::with(['expediente.cliente'])->findOrFail($id);
         return view('documentos.show', compact('documento'));
     }
 
-    // ==========================================
-    // 5. VALIDAR DOCUMENTO (UPDATE)
-    // ==========================================
     public function update(Request $request, $id)
     {
         $documento = Documento::findOrFail($id);
@@ -113,6 +103,13 @@ class DocumentoController extends Controller
             $documento->motivo_rechazo = $request->motivo_rechazo;
             $documento->save();
 
+            \App\Helpers\Historial::registrar(
+                'Documentos',
+                'Rechazar',
+                'Se rechazó el documento: ' . $documento->nombre_doc . '. Motivo: ' . $request->motivo_rechazo,
+                $documento->id_expediente
+            );
+
             return redirect()->back()->with('warning', 'Documento rechazado. El cliente debera corregirlo y subirlo de nuevo.');
         }
 
@@ -120,15 +117,19 @@ class DocumentoController extends Controller
         $documento->motivo_rechazo = null;
         $documento->save();
 
+        \App\Helpers\Historial::registrar(
+            'Documentos',
+            'Validar',
+            'Se validó el documento: ' . $documento->nombre_doc,
+            $documento->id_expediente
+        );
+
         $this->moverACarpetaAprobados($documento);
 
         return redirect()->route('documentos.index')
                         ->with('success', 'Documento validado correctamente.');
     }
 
-    // ==========================================
-    // 6. ELIMINAR DOCUMENTO (DESTROY)
-    // ==========================================
     public function destroy($id)
     {
         $documento = Documento::findOrFail($id);
@@ -138,16 +139,19 @@ class DocumentoController extends Controller
         }
         
         $nombre = $documento->nombre_doc;
+        $expedienteId = $documento->id_expediente;
         $documento->delete();
 
-        // ✅ REDIRIGE A LA PÁGINA ANTERIOR (la misma donde se eliminó)
-        return redirect()->back()
-                        ->with('success', "Documento '{$nombre}' eliminado.");
+        \App\Helpers\Historial::registrar(
+            'Documentos',
+            'Eliminar',
+            'Se eliminó el documento: ' . $nombre . ' del expediente #' . $expedienteId,
+            $expedienteId
+        );
+
+        return redirect()->back()->with('success', "Documento '{$nombre}' eliminado.");
     }
 
-    // ==========================================
-    // 7. CLIENTE - VER SUS DOCUMENTOS
-    // ==========================================
     public function misDocumentos()
     {
         $cliente = auth()->user()->cliente;
@@ -187,7 +191,6 @@ class DocumentoController extends Controller
         $rechazados = $documentosSubidos->where('estado_doc', 'Rechazado');
 
         $documentosNoRechazados = $documentosSubidos->where('estado_doc', '!=', 'Rechazado');
-        $nombresSubidos = $documentosNoRechazados->pluck('nombre_doc')->toArray();
         
         foreach ($requeridos as $req) {
             $subido = $documentosNoRechazados->where('nombre_doc', $req->nombre)->first();
@@ -212,25 +215,14 @@ class DocumentoController extends Controller
         ]);
     }
 
-    // ==========================================
-    // 8. CLIENTE - SUBIR DOCUMENTO
-    // ==========================================
     public function subirDocumentoCliente(Request $request)
     {
         $request->validate([
             'id_expediente' => 'required|exists:expedientes,id_expediente',
             'nombre_doc' => 'required|string|max:200',
             'archivo' => 'required|file|max:20480|mimes:pdf',
-        ], [
-            'id_expediente.required' => 'El expediente es obligatorio.',
-            'id_expediente.exists' => 'El expediente seleccionado no existe.',
-            'nombre_doc.required' => 'El nombre del documento es obligatorio.',
-            'archivo.required' => 'Debes seleccionar un archivo PDF.',
-            'archivo.max' => 'El archivo no debe superar los 20 MB.',
-            'archivo.mimes' => 'Solo se permiten archivos en formato PDF.'
         ]);
 
-        // Eliminar documentos rechazados anteriores con el mismo nombre
         $rechazadoAnterior = Documento::where('id_expediente', $request->id_expediente)
                                       ->where('nombre_doc', $request->nombre_doc)
                                       ->where('estado_doc', 'Rechazado')
@@ -271,17 +263,20 @@ class DocumentoController extends Controller
             'es_duplicado' => false,
         ]);
 
+        \App\Helpers\Historial::registrar(
+            'Documentos',
+            'Subir',
+            'Cliente subió el documento: ' . $request->nombre_doc . ' al expediente #' . $request->id_expediente,
+            $request->id_expediente
+        );
+
         return redirect()->route('cliente.documentos')
                         ->with('success', 'Documento subido exitosamente. Queda pendiente de validacion.');
     }
 
-    // ==========================================
-    // 9. FUNCIONARIO - VER DOCUMENTOS DE CLIENTE
-    // ==========================================
     public function documentosFuncionario($idCliente)
     {
         $cliente = \App\Models\Cliente::findOrFail($idCliente);
-        
         $expediente = Expediente::where('Id_Cliente', $idCliente)->first();
 
         if (!$expediente) {
@@ -299,9 +294,6 @@ class DocumentoController extends Controller
         ]);
     }
 
-    // ==========================================
-    // 10. FUNCIONARIO - REQUERIR DOCUMENTOS (MÚLTIPLES)
-    // ==========================================
     public function requerirDocumento(Request $request)
     {
         try {
@@ -309,11 +301,6 @@ class DocumentoController extends Controller
                 'id_expediente' => 'required|exists:expedientes,id_expediente',
                 'documentos' => 'required|array|min:1',
                 'documentos.*' => 'string|max:100'
-            ], [
-                'id_expediente.required' => 'El expediente es obligatorio.',
-                'id_expediente.exists' => 'El expediente seleccionado no existe.',
-                'documentos.required' => 'Debes seleccionar al menos un documento.',
-                'documentos.min' => 'Debes seleccionar al menos un documento.'
             ]);
 
             $expediente = Expediente::find($request->id_expediente);
@@ -337,7 +324,13 @@ class DocumentoController extends Controller
 
             $cantidad = count($request->documentos);
 
-            // ✅ REDIRIGE A LA BÚSQUEDA DEL CLIENTE
+            \App\Helpers\Historial::registrar(
+                'Documentos',
+                'Requerir',
+                'Se requirieron ' . $cantidad . ' documento(s) al cliente del expediente #' . $request->id_expediente,
+                $request->id_expediente
+            );
+
             $cedula = $expediente->cliente->identificacion ?? '';
             return redirect()->route('funcionario.documentos.buscar', ['cedula' => $cedula])
                             ->with('success', "Se requirieron $cantidad documento(s) al cliente.");
@@ -349,9 +342,6 @@ class DocumentoController extends Controller
         }
     }
 
-    // ==========================================
-    // 11. FUNCIONARIO - BUSCAR CLIENTE POR CÉDULA
-    // ==========================================
     public function buscarCliente(Request $request)
     {
         $cedula = $request->input('cedula');
@@ -377,15 +367,9 @@ class DocumentoController extends Controller
                                                 ->orderBy('created_at', 'desc')
                                                 ->get();
                     
-                    $pendientesAceptar = $todosDocumentos->where('estado_doc', 'Pendiente')
-                                                         ->whereNotNull('Id_Cliente');
-                    
-                    $subidosEmpresa = $todosDocumentos->where('estado_doc', 'Validado')
-                                                      ->whereNull('Id_Cliente');
-                    
-                    $aceptados = $todosDocumentos->where('estado_doc', 'Validado')
-                                                 ->whereNotNull('Id_Cliente');
-                    
+                    $pendientesAceptar = $todosDocumentos->where('estado_doc', 'Pendiente')->whereNotNull('Id_Cliente');
+                    $subidosEmpresa = $todosDocumentos->where('estado_doc', 'Validado')->whereNull('Id_Cliente');
+                    $aceptados = $todosDocumentos->where('estado_doc', 'Validado')->whereNotNull('Id_Cliente');
                     $rechazados = $todosDocumentos->where('estado_doc', 'Rechazado');
                     
                     $clienteDocumentosRequeridos = \App\Models\ClienteDocumentoRequerido::where('Id_Cliente', $cliente->Id_Cliente)
@@ -393,21 +377,14 @@ class DocumentoController extends Controller
                                                                                         ->toArray();
                     
                     $requeridos = DocumentoRequerido::whereIn('Id_DocumentoRequerido', $clienteDocumentosRequeridos)->get();
-                    
-                    // ==========================================
-                    // PENDIENTES DE SUBIR
-                    // ==========================================
                     $pendientesSubir = collect();
 
                     foreach ($requeridos as $req) {
-                        // Verificar si el cliente ya subió este documento (que no esté rechazado)
                         $yaSubido = $todosDocumentos->where('nombre_doc', $req->nombre)
                                                     ->where('estado_doc', '!=', 'Rechazado')
                                                     ->first();
                         
-                        // Si NO lo ha subido (o solo tiene rechazado), mostrarlo
                         if (!$yaSubido) {
-                            // Buscar si hay un documento rechazado con este nombre
                             $rechazado = $todosDocumentos->where('nombre_doc', $req->nombre)
                                                         ->where('estado_doc', 'Rechazado')
                                                         ->first();
@@ -441,18 +418,12 @@ class DocumentoController extends Controller
         ));
     }
 
-    // ==========================================
-    // 12. FUNCIONARIO - SUBIR DOCUMENTO DE EMPRESA
-    // ==========================================
     public function subirDocumentoEmpresa($id_expediente)
     {
         $expediente = Expediente::findOrFail($id_expediente);
         return view('documentos.subir-empresa', compact('expediente'));
     }
 
-    // ==========================================
-    // 13. FUNCIONARIO - MOSTRAR FORMULARIO PARA REQUERIR
-    // ==========================================
     public function mostrarRequerir($id_expediente)
     {
         $expediente = Expediente::with('cliente')->findOrFail($id_expediente);
@@ -460,9 +431,6 @@ class DocumentoController extends Controller
         return view('documentos.requerir-documento', compact('expediente', 'cedula'));
     }
 
-    // ==========================================
-    // 14. FUNCIONARIO - GUARDAR DOCUMENTO DE EMPRESA
-    // ==========================================
     public function storeDocumentoEmpresa(Request $request)
     {
         try {
@@ -471,17 +439,6 @@ class DocumentoController extends Controller
                 'nombre_doc' => 'required|string|max:200',
                 'tipo_doc' => 'required|string|max:80',
                 'archivo' => 'required|file|max:20480|mimes:pdf'
-            ], [
-                'id_expediente.required' => 'El expediente es obligatorio.',
-                'id_expediente.integer' => 'El expediente debe ser un numero valido.',
-                'id_expediente.exists' => 'El expediente seleccionado no existe en la base de datos.',
-                'nombre_doc.required' => 'El nombre del documento es obligatorio.',
-                'nombre_doc.max' => 'El nombre no debe exceder los 200 caracteres.',
-                'tipo_doc.required' => 'El tipo de documento es obligatorio.',
-                'tipo_doc.max' => 'El tipo no debe exceder los 80 caracteres.',
-                'archivo.required' => 'Debes seleccionar un archivo PDF.',
-                'archivo.max' => 'El archivo no debe superar los 20 MB.',
-                'archivo.mimes' => 'Solo se permiten archivos en formato PDF.'
             ]);
 
             $existe = Documento::where('id_expediente', $request->id_expediente)
@@ -489,8 +446,7 @@ class DocumentoController extends Controller
                               ->exists();
 
             if ($existe) {
-                return redirect()->back()
-                    ->withInput()
+                return redirect()->back()->withInput()
                     ->with('warning', 'Ya existe un documento con ese nombre en este expediente.');
             }
 
@@ -507,25 +463,19 @@ class DocumentoController extends Controller
                 'es_duplicado' => false,
             ]);
 
-            if (!$documento) {
-                return redirect()->back()
-                    ->with('error', 'Error al guardar el documento en la base de datos.')
-                    ->withInput();
-            }
+            \App\Helpers\Historial::registrar(
+                'Documentos',
+                'Subir Empresa',
+                'Funcionario subió documento de empresa: ' . $request->nombre_doc . ' al expediente #' . $request->id_expediente,
+                $request->id_expediente
+            );
 
-            // ✅ REDIRIGE A LA BÚSQUEDA DEL CLIENTE
             $cedula = $request->query('cedula') ?? '';
             return redirect()->route('funcionario.documentos.buscar', ['cedula' => $cedula])
                             ->with('success', 'Documento de empresa subido exitosamente.');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return redirect()->back()
-                ->withErrors($e->validator)
-                ->withInput();
-        } catch (\Illuminate\Database\QueryException $e) {
-            return redirect()->back()
-                ->with('error', 'Error de base de datos: ' . $e->getMessage())
-                ->withInput();
+            return redirect()->back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Error al subir el documento: ' . $e->getMessage())
@@ -533,9 +483,6 @@ class DocumentoController extends Controller
         }
     }
 
-    // ==========================================
-    // 15. CLIENTE - ELIMINAR DOCUMENTO SUBIDO
-    // ==========================================
     public function eliminarDocumentoCliente($id)
     {
         $documento = Documento::findOrFail($id);
@@ -554,32 +501,37 @@ class DocumentoController extends Controller
         }
         
         $nombre = $documento->nombre_doc;
+        $expedienteId = $documento->id_expediente;
         $documento->delete();
+
+        \App\Helpers\Historial::registrar(
+            'Documentos',
+            'Eliminar',
+            'Cliente eliminó el documento: ' . $nombre . ' del expediente #' . $expedienteId,
+            $expedienteId
+        );
 
         return redirect()->route('cliente.documentos')
                         ->with('success', "Documento '{$nombre}' eliminado. Vuelve a subirlo cuando estes listo.");
     }
 
-    // ==========================================
-    // 16. ELIMINAR SOLICITUD DE DOCUMENTO (Funcionario)
-    // ==========================================
     public function eliminarSolicitud($id)
     {
-        // Buscar la solicitud en DocumentoRequerido
         $solicitud = DocumentoRequerido::findOrFail($id);
-        
-        // También eliminar la relación con el cliente
+        $nombre = $solicitud->nombre;
+
         \App\Models\ClienteDocumentoRequerido::where('Id_DocumentoRequerido', $id)->delete();
-        
-        // Eliminar la solicitud
         $solicitud->delete();
-        
+
+        \App\Helpers\Historial::registrar(
+            'Documentos',
+            'Eliminar Solicitud',
+            'Se eliminó la solicitud de documento: ' . $nombre
+        );
+
         return redirect()->back()->with('success', 'Solicitud de documento eliminada correctamente.');
     }
 
-    // ==========================================
-    // FUNCIÓN AUXILIAR - MOVER A CARPETA APROBADOS
-    // ==========================================
     private function moverACarpetaAprobados($documento)
     {
         if (class_exists(\App\Models\Carpeta::class)) {
