@@ -5,6 +5,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\HistorialController;
+use App\Http\Controllers\NotificacionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ExpedienteCarpetaController;
@@ -74,6 +75,10 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
 
     Route::get('/historial', [HistorialController::class, 'index'])->name('historial.index');
 
+    // Notificaciones
+    Route::get('/notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
+    Route::get('/notificaciones/crear', [NotificacionController::class, 'create'])->name('notificaciones.crear');
+    Route::post('/notificaciones', [NotificacionController::class, 'store'])->name('notificaciones.store');
 });
 
 
