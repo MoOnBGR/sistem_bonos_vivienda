@@ -86,6 +86,7 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
 
 Route::get('/expedientes/{expediente}/carpetas/{carpeta?}', [ExpedienteCarpetaController::class, 'index'])->name('expedientes.carpetas.index');
 Route::post('/expedientes/{expediente}/carpetas', [ExpedienteCarpetaController::class, 'store'])->name('expedientes.carpetas.store');
+Route::get('/expedientes/carpetas/{carpeta}/editar', [ExpedienteCarpetaController::class, 'edit'])->name('expedientes.carpetas.editar');
 Route::put('/expedientes/carpetas/{carpeta}', [ExpedienteCarpetaController::class, 'update'])->name('expedientes.carpetas.update');
 Route::delete('/expedientes/carpetas/{carpeta}', [ExpedienteCarpetaController::class, 'destroy'])->name('expedientes.carpetas.destroy');
 

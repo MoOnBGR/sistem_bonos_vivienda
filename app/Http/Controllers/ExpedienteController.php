@@ -10,20 +10,30 @@ use Illuminate\Http\Request;
 
 class ExpedienteController extends Controller
 {
+    /**
+     * Pantalla de Listado: muestra todos los expedientes con filtros
+     * (búsqueda por cédula/nombre/apellidos, estado, rango de fechas).
+     */
     public function index(Request $request)
     {
-        $clienteBuscado = null;
+        $expedientes = collect();
         $busquedaSinResultados = false;
+        $mensajeSinResultados = null;
 
-        if ($request->filled('identificacion')) {
-            $clienteBuscado = Cliente::where('identificacion', $request->identificacion)->first();
+        if ($request->filled('busqueda')) {
+            $termino = $request->busqueda;
 
-            if (!$clienteBuscado) {
+            $idsClientes = Cliente::where('identificacion', 'like', "%{$termino}%")
+                ->orWhere('nombre', 'like', "%{$termino}%")
+                ->orWhere('apellidos', 'like', "%{$termino}%")
+                ->pluck('Id_Cliente');
+
+            if ($idsClientes->isEmpty()) {
                 $busquedaSinResultados = true;
-                $expedientes = collect();
+                $mensajeSinResultados = 'No hay registros de expedientes con esa cédula, nombre o apellido.';
             } else {
                 $expedientes = Expediente::with(['cliente', 'funcionario'])
-                    ->where('Id_Cliente', $clienteBuscado->Id_Cliente)
+                    ->whereIn('Id_Cliente', $idsClientes)
                     ->orderByDesc('fecha_creacion')
                     ->get();
             }
@@ -45,11 +55,31 @@ class ExpedienteController extends Controller
             }
 
             $expedientes = $query->orderByDesc('fecha_creacion')->get();
+
+            if ($expedientes->isEmpty()) {
+                $tieneEstado = $request->filled('estado');
+                $tieneFecha = $request->filled('fecha_desde') || $request->filled('fecha_hasta');
+
+                if ($tieneEstado && $tieneFecha) {
+                    $busquedaSinResultados = true;
+                    $mensajeSinResultados = 'No hay registros de expedientes con ese estado y esa fecha.';
+                } elseif ($tieneEstado) {
+                    $busquedaSinResultados = true;
+                    $mensajeSinResultados = 'No hay registros de expedientes con ese estado.';
+                } elseif ($tieneFecha) {
+                    $busquedaSinResultados = true;
+                    $mensajeSinResultados = 'No hay registros de expedientes con esa fecha.';
+                }
+            }
         }
 
-        return view('expediente.index', compact('expedientes', 'clienteBuscado', 'busquedaSinResultados'));
+        return view('expediente.index', compact('expedientes', 'busquedaSinResultados', 'mensajeSinResultados'));
     }
 
+    /**
+     * Busca un cliente por cédula para iniciar el flujo de "Nuevo expediente"
+     * desde el botón de la pantalla de Listado.
+     */
     public function buscarParaCrear(Request $request)
     {
         $identificacion = $request->input('identificacion');
@@ -69,6 +99,10 @@ class ExpedienteController extends Controller
         return redirect()->route('expedientes.crear', $cliente->Id_Cliente);
     }
 
+    /**
+     * Caso de uso 3 (búsqueda previa): pide la cédula para ubicar al cliente
+     * antes de consultar/actualizar/cerrar un expediente.
+     */
     public function buscarPorCedula(Request $request)
     {
         $identificacion = $request->input('identificacion');
@@ -82,6 +116,9 @@ class ExpedienteController extends Controller
         return redirect()->route('expedientes.consultar', $cliente->Id_Cliente);
     }
 
+    /**
+     * Caso de uso 4: Crear Expediente
+     */
     public function create(Cliente $cliente)
     {
         $funcionarios = User::where('tipo_usuario', 'Funcionario')->get();
