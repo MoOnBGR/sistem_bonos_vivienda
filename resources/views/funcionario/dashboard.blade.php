@@ -38,10 +38,10 @@
                 <p class="text-gray-500 text-sm">Ver historial de cambios y trámites.</p>
             </a>
 
-            <a href="#"
+            <a href="{{ route('funcionario.notificaciones.index') }}"
                 class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-[#550000] hover:shadow-md transition">
                 <h4 class="text-[#550000] font-semibold text-lg mb-1">Notificaciones</h4>
-                <p class="text-gray-500 text-sm">Revisar notificaciones del sistema.</p>
+                <p class="text-gray-500 text-sm">Enviar y consultar notificaciones por correo.</p>
             </a>
 
         </div>
