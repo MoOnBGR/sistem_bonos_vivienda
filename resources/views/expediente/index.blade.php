@@ -17,33 +17,33 @@
     </a>
 </div>
 
-        <h3 class="expediente-titulo">Expedientes</h3>
+        <h3 class="expediente-titulo mb-6">Expedientes</h3>
 
         @if (session('success'))
-            <div class="expediente-mensaje-exito">{{ session('success') }}</div>
+            <div class="expediente-mensaje-exito mb-4">{{ session('success') }}</div>
         @endif
 
         @if (session('error'))
-            <div class="expediente-mensaje-error">{{ session('error') }}</div>
+            <div class="expediente-mensaje-error mb-4">{{ session('error') }}</div>
         @endif
 
-        <!-- Búsqueda rápida: ir directo al expediente de un cliente -->
-        <form method="POST" action="{{ route('expedientes.buscar') }}" class="flex gap-2 mb-2 items-end">
-            @csrf
+        <!-- Búsqueda rápida: cédula, nombre o apellidos del cliente -->
+        <form method="GET" action="{{ route('expedientes.index') }}" class="flex gap-2 mb-3 items-end">
             <div class="expediente-form-group mb-0">
-                <label>Buscar expediente por cédula</label>
-                <input type="text" name="identificacion" placeholder="Cédula del cliente..." class="w-64">
+                <label>Buscar por cédula, nombre o apellido</label>
+                <input type="text" name="busqueda" value="{{ request('busqueda') }}"
+                       placeholder="Cédula, nombre o apellido..." class="w-64">
             </div>
             <button type="submit" class="text-[#550000] font-medium hover:underline bg-transparent mb-2">Buscar</button>
         </form>
 
-        @if ($errors->has('identificacion'))
-            <div class="expediente-mensaje-error mb-2">{{ $errors->first('identificacion') }}</div>
-            <p class="text-gray-500 mb-6">No hay registros de expedientes con esa cédula. Dale clic en "Filtrar" para ver todos nuevamente.</p>
+        @if ($busquedaSinResultados)
+            <div class="expediente-mensaje-error mb-2">{{ $mensajeSinResultados }}</div>
+            <p class="text-gray-500 mb-6">Dale clic en "estado todos y filtrar" para ver todos nuevamente.</p>
         @endif
 
         <!-- Filtros -->
-        <form method="GET" action="{{ route('expedientes.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 items-end">
+        <form method="GET" action="{{ route('expedientes.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 items-end">
             <div class="expediente-form-group mb-0">
                 <label>Estado</label>
                 <select name="estado">
@@ -70,7 +70,7 @@
             </div>
         </form>
 
-        @unless ($errors->has('identificacion'))
+        @unless ($busquedaSinResultados)
         <!-- Tabla de expedientes -->
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
@@ -92,7 +92,7 @@
                             <td class="py-3 pr-4">{{ \Carbon\Carbon::parse($expediente->fecha_creacion)->format('d/m/Y') }}</td>
                             <td class="py-3 pr-4">{{ $expediente->funcionario->name }}</td>
                             <td class="py-3 pr-4">
-                                <span class="expediente-estado {{ $expediente->estado === 'En proceso' ? 'en-proceso' : 'completado' }}">
+                                <span class="expediente-estado {{ $expediente->estado === 'En proceso' ? 'en-proceso' : ($expediente->estado === 'Inactivo' ? 'inactivo' : 'completado') }}">
                                     {{ $expediente->estado }}
                                 </span>
                             </td>

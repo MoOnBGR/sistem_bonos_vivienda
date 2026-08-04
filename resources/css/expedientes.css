@@ -90,6 +90,10 @@
     color: #065f46;
 }
 
+.expediente-estado.inactivo {
+    background-color: #e5e7eb;
+    color: #4b5563;
+}
 .expediente-mensaje-exito {
     padding: 0.85rem 1rem;
     background-color: #d1fae5;

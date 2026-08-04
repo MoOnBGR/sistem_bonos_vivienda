@@ -11,6 +11,7 @@
         modalSubirDocumento: false, 
         modalMoverDocumento: null 
     }">
+    <div class="expediente-container" x-data="{ modalNuevaCarpeta: false }">
 
         <!-- Pestañas de navegación -->
         <div class="flex gap-2 mb-6 border-b border-gray-200 pb-4">

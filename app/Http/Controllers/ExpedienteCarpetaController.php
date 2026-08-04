@@ -62,6 +62,15 @@ class ExpedienteCarpetaController extends Controller
     }
 
     /**
+     * Muestra el formulario para renombrar una carpeta (página independiente,
+     * en vez de modal, ya que el modal daba problemas de clic en algunos equipos).
+     */
+    public function edit(Carpeta $carpeta)
+    {
+        return view('expediente.carpeta-editar', compact('carpeta'));
+    }
+
+    /**
      * Renombra una carpeta del expediente.
      */
     public function update(Request $request, Carpeta $carpeta)
@@ -72,7 +81,12 @@ class ExpedienteCarpetaController extends Controller
 
         $carpeta->update(['nombre' => $request->nombre]);
 
-        return back()->with('success', 'Carpeta renombrada correctamente.');
+        return redirect()
+            ->route('expedientes.carpetas.index', [
+                $carpeta->id_expediente,
+                $carpeta->id_carpeta_padre,
+            ])
+            ->with('success', 'Carpeta renombrada correctamente.');
     }
 
     /**

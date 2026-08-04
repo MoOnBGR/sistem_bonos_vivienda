@@ -26,20 +26,20 @@
             EXP-{{ str_pad($expediente->id_expediente, 4, '0', STR_PAD_LEFT) }} ·
             {{ $expediente->cliente->nombre }} {{ $expediente->cliente->apellidos }}
         </h3>
-        <p class="text-sm text-gray-500 -mt-3 mb-4">
+        <p class="text-sm text-gray-500 mt-1 mb-6">
             Editando información del expediente
         </p>
 
         @if (session('success'))
-            <div class="expediente-mensaje-exito">{{ session('success') }}</div>
+            <div class="expediente-mensaje-exito mb-4">{{ session('success') }}</div>
         @endif
 
         @if (session('error'))
-            <div class="expediente-mensaje-error">{{ session('error') }}</div>
+            <div class="expediente-mensaje-error mb-4">{{ session('error') }}</div>
         @endif
 
         @if ($errors->any())
-            <div class="expediente-mensaje-error">
+            <div class="expediente-mensaje-error mb-4">
                 <ul class="list-disc list-inside">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -93,10 +93,18 @@
                 </select>
             </div>
 
+            @if ($expediente->estado === 'Inactivo')
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-sm text-yellow-800">
+                    Este expediente está actualmente <strong>Inactivo</strong>. Si le das "Guardar cambios" aquí, el estado
+                    volverá a "En proceso". Si no quieres cambiar el estado, usa "Cancelar" o el botón "Reabrir expediente"
+                    de abajo en su lugar.
+                </div>
+            @endif
+
             <!-- Necesario porque Id_Cliente es requerido por el Request -->
             <input type="hidden" name="Id_Cliente" value="{{ $expediente->Id_Cliente }}">
 
-            <div class="flex gap-3 mt-6">
+            <div class="flex gap-3 mt-6 mb-8">
                 <button type="submit" class="expediente-btn">
                     Guardar cambios
                 </button>
@@ -111,9 +119,9 @@
 
         @if ($expediente->estado !== 'Inactivo')
             <!-- Cerrar expediente (acción independiente) -->
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h4 class="font-semibold text-red-800 mb-1">Cerrar expediente</h4>
-                <p class="text-sm text-red-700 mb-3">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-5 mt-4">
+                <h4 class="font-semibold text-red-800 mb-2">Cerrar expediente</h4>
+                <p class="text-sm text-red-700 mb-4">
                     Esta acción marcará el expediente como "Inactivo". Podrás seguir consultándolo, pero no se podrán
                     hacer más cambios.
                 </p>
@@ -127,9 +135,9 @@
             </div>
         @else
             <!-- Reabrir expediente -->
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 class="font-semibold text-green-800 mb-1">Expediente cerrado</h4>
-                <p class="text-sm text-green-700 mb-3">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-5 mt-4">
+                <h4 class="font-semibold text-green-800 mb-2">Expediente cerrado</h4>
+                <p class="text-sm text-green-700 mb-4">
                     Este expediente se encuentra cerrado. Si fue un error, puedes reabrirlo aquí (volverá al estado "En proceso").
                 </p>
                 <form method="POST" action="{{ route('expedientes.reabrir', $expediente->id_expediente) }}"
