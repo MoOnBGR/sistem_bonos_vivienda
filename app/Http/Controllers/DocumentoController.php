@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Documento;
 use App\Models\Expediente;
 use App\Models\DocumentoRequerido;
+use App\Models\Carpeta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -37,16 +38,6 @@ class DocumentoController extends Controller
             'archivo' => 'required|file|max:20480|mimes:pdf',
             'nombre_doc' => 'required|string|max:200',
             'tipo_doc' => 'required|string|max:80'
-        ], [
-            'id_expediente.required' => 'El campo ID del expediente es obligatorio.',
-            'id_expediente.exists' => 'El expediente seleccionado no existe.',
-            'archivo.required' => 'Debes seleccionar un archivo PDF.',
-            'archivo.max' => 'El archivo no debe superar los 20 MB.',
-            'archivo.mimes' => 'Solo se permiten archivos en formato PDF.',
-            'nombre_doc.required' => 'El campo Nombre del Documento es obligatorio.',
-            'nombre_doc.max' => 'El nombre del documento no debe exceder los 200 caracteres.',
-            'tipo_doc.required' => 'El campo Tipo de Documento es obligatorio.',
-            'tipo_doc.max' => 'El tipo de documento no debe exceder los 80 caracteres.'
         ]);
 
         $existe = Documento::where('id_expediente', $request->id_expediente)
@@ -98,6 +89,8 @@ class DocumentoController extends Controller
             'motivo_rechazo' => 'required_if:estado_doc,Rechazado|nullable|string|max:500',
         ]);
 
+        $cedula = $request->input('cedula') ?? '';
+
         if ($request->estado_doc == 'Rechazado') {
             $documento->estado_doc = 'Rechazado';
             $documento->motivo_rechazo = $request->motivo_rechazo;
@@ -110,7 +103,8 @@ class DocumentoController extends Controller
                 $documento->id_expediente
             );
 
-            return redirect()->back()->with('warning', 'Documento rechazado. El cliente debera corregirlo y subirlo de nuevo.');
+            return redirect()->route('funcionario.documentos.buscar', ['cedula' => $cedula])
+                            ->with('warning', 'Documento rechazado. El cliente debera corregirlo y subirlo de nuevo.');
         }
 
         $documento->estado_doc = 'Validado';
@@ -126,7 +120,7 @@ class DocumentoController extends Controller
 
         $this->moverACarpetaAprobados($documento);
 
-        return redirect()->route('documentos.index')
+        return redirect()->route('funcionario.documentos.buscar', ['cedula' => $cedula])
                         ->with('success', 'Documento validado correctamente.');
     }
 
@@ -418,10 +412,10 @@ class DocumentoController extends Controller
         ));
     }
 
-    public function subirDocumentoEmpresa($id_expediente)
+    public function subirDocumentoEmpresa($id_expediente, $carpetaId = null)
     {
         $expediente = Expediente::findOrFail($id_expediente);
-        return view('documentos.subir-empresa', compact('expediente'));
+        return view('documentos.subir-empresa', compact('expediente', 'carpetaId'));
     }
 
     public function mostrarRequerir($id_expediente)
@@ -438,7 +432,8 @@ class DocumentoController extends Controller
                 'id_expediente' => 'required|integer|exists:expedientes,id_expediente',
                 'nombre_doc' => 'required|string|max:200',
                 'tipo_doc' => 'required|string|max:80',
-                'archivo' => 'required|file|max:20480|mimes:pdf'
+                'archivo' => 'required|file|max:20480|mimes:pdf',
+                'id_carpeta' => 'nullable|exists:carpetas_expedientes,id_carpeta',
             ]);
 
             $existe = Documento::where('id_expediente', $request->id_expediente)
@@ -461,6 +456,7 @@ class DocumentoController extends Controller
                 'ruta_almac' => $path,
                 'estado_doc' => 'Validado',
                 'es_duplicado' => false,
+                'id_carpeta' => $request->id_carpeta ?? null,
             ]);
 
             \App\Helpers\Historial::registrar(
@@ -530,6 +526,165 @@ class DocumentoController extends Controller
         );
 
         return redirect()->back()->with('success', 'Solicitud de documento eliminada correctamente.');
+    }
+
+    // ==========================================
+    // SUBIR DOCUMENTO A CARPETA ESPECÍFICA
+    // ==========================================
+    public function subirDocumentoCarpeta(Request $request, $expedienteId, $carpetaId)
+    {
+        $request->validate([
+            'archivo' => 'required|file|max:20480|mimes:pdf',
+            'nombre_doc' => 'required|string|max:200',
+            'tipo_doc' => 'required|string|max:80'
+        ]);
+
+        $expediente = Expediente::findOrFail($expedienteId);
+        
+        $existe = Documento::where('id_expediente', $expedienteId)
+                          ->where('nombre_doc', $request->nombre_doc)
+                          ->where('id_carpeta', $carpetaId)
+                          ->exists();
+
+        if ($existe) {
+            return back()->with('warning', 'Ya existe un documento con ese nombre en esta carpeta.');
+        }
+
+        $path = $request->file('archivo')->store('documentos', 'public');
+
+        Documento::create([
+            'id_expediente' => $expedienteId,
+            'id_funcionario' => auth()->id(),
+            'Id_Cliente' => null,
+            'nombre_doc' => $request->nombre_doc,
+            'tipo_doc' => $request->tipo_doc,
+            'ruta_almac' => $path,
+            'estado_doc' => 'Validado',
+            'es_duplicado' => false,
+            'id_carpeta' => $carpetaId,
+        ]);
+
+        \App\Helpers\Historial::registrar(
+            'Documentos',
+            'Subir Carpeta',
+            'Se subió el documento: ' . $request->nombre_doc . ' a la carpeta del expediente #' . $expedienteId,
+            $expedienteId
+        );
+
+        return redirect()->back()->with('success', 'Documento subido correctamente a la carpeta.');
+    }
+
+    // ==========================================
+    // MOVER DOCUMENTO A OTRA CARPETA (Método original)
+    // ==========================================
+    public function moverDocumento(Request $request, $id)
+    {
+        $request->validate([
+            'id_carpeta_destino' => 'nullable|exists:carpetas_expedientes,id_carpeta',
+        ]);
+
+        $documento = Documento::findOrFail($id);
+        $carpetaOrigen = $documento->id_carpeta;
+        $documento->id_carpeta = $request->id_carpeta_destino;
+        $documento->save();
+
+        $nombreCarpetaOrigen = $carpetaOrigen ? Carpeta::find($carpetaOrigen)?->nombre : 'Raíz';
+        $nombreCarpetaDestino = $request->id_carpeta_destino ? Carpeta::find($request->id_carpeta_destino)?->nombre : 'Raíz';
+
+        \App\Helpers\Historial::registrar(
+            'Documentos',
+            'Mover',
+            'Se movió el documento: ' . $documento->nombre_doc . ' de "' . $nombreCarpetaOrigen . '" a "' . $nombreCarpetaDestino . '"',
+            $documento->id_expediente
+        );
+
+        return redirect()->back()->with('success', 'Documento movido correctamente.');
+    }
+
+    // ==========================================
+    // COPIAR DOCUMENTO (guardar en sesión)
+    // ==========================================
+    public function copiarDocumento(Request $request, $id)
+    {
+        $documento = Documento::findOrFail($id);
+        
+        // Guardar en sesión el documento a mover
+        session(['documento_a_mover' => $id]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Documento copiado para mover',
+            'documento' => $documento->nombre_doc
+        ]);
+    }
+
+    // ==========================================
+    // PEGAR DOCUMENTO (mover a carpeta actual)
+    // ==========================================
+    public function pegarDocumento(Request $request, $expedienteId)
+    {
+        $documentoId = session('documento_a_mover');
+        
+        if (!$documentoId) {
+            return response()->json([
+                'error' => 'No hay documento para pegar'
+            ], 400);
+        }
+        
+        $documento = Documento::findOrFail($documentoId);
+        
+        // Validar que el documento pertenezca al expediente
+        if ($documento->id_expediente != $expedienteId) {
+            return response()->json([
+                'error' => 'El documento no pertenece a este expediente'
+            ], 400);
+        }
+        
+        // Obtener la carpeta actual desde la vista
+        $carpetaId = $request->input('id_carpeta_destino');
+        
+        // Si no se especifica carpeta, se mueve a la raíz (null)
+        $carpetaDestino = $carpetaId ?: null;
+        
+        // Guardar datos para historial
+        $carpetaOrigen = $documento->id_carpeta;
+        $nombreCarpetaOrigen = $carpetaOrigen ? 
+            \App\Models\Carpeta::find($carpetaOrigen)?->nombre : 'Raíz';
+        $nombreCarpetaDestino = $carpetaDestino ? 
+            \App\Models\Carpeta::find($carpetaDestino)?->nombre : 'Raíz';
+        
+        // Mover el documento
+        $documento->id_carpeta = $carpetaDestino;
+        $documento->save();
+        
+        // Limpiar sesión
+        session()->forget('documento_a_mover');
+        
+        \App\Helpers\Historial::registrar(
+            'Documentos',
+            'Mover (Copiar/Pegar)',
+            'Se movió el documento: ' . $documento->nombre_doc . 
+            ' de "' . $nombreCarpetaOrigen . '" a "' . $nombreCarpetaDestino . '"',
+            $documento->id_expediente
+        );
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Documento movido correctamente',
+            'documento' => $documento->nombre_doc
+        ]);
+    }
+
+    // ==========================================
+    // CANCELAR MOVIMIENTO
+    // ==========================================
+    public function cancelarMovimiento()
+    {
+        session()->forget('documento_a_mover');
+        return response()->json([
+            'success' => true,
+            'message' => 'Movimiento cancelado'
+        ]);
     }
 
     private function moverACarpetaAprobados($documento)

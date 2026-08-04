@@ -60,6 +60,34 @@
             {{-- ID del expediente (oculto) --}}
             <input type="hidden" name="id_expediente" value="{{ $expediente->id_expediente ?? '' }}">
 
+            {{-- ========================================== --}}
+            {{-- NUEVO: Selección de carpeta destino        --}}
+            {{-- ========================================== --}}
+            <div>
+                <label for="id_carpeta" class="block text-sm font-medium text-gray-700 mb-1">
+                    Carpeta destino (opcional)
+                </label>
+                <select name="id_carpeta" 
+                        id="id_carpeta" 
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#550000] focus:ring focus:ring-[#550000] focus:ring-opacity-50">
+                    <option value="">Raíz del expediente</option>
+                    @if(isset($expediente) && $expediente)
+                        @php
+                            $carpetasDisponibles = \App\Models\Carpeta::where('id_expediente', $expediente->id_expediente)
+                                                                     ->orderBy('nombre')
+                                                                     ->get();
+                        @endphp
+                        @foreach($carpetasDisponibles as $carpeta)
+                            <option value="{{ $carpeta->id_carpeta }}" 
+                                    {{ (isset($carpetaId) && $carpetaId == $carpeta->id_carpeta) ? 'selected' : '' }}>
+                                {{ $carpeta->nombre }}
+                            </option>
+                        @endforeach
+                    @endif
+                </select>
+                <p class="text-xs text-gray-400 mt-1">Selecciona una carpeta específica o déjalo en raíz</p>
+            </div>
+
             {{-- Nombre del documento --}}
             <div>
                 <label for="nombre_doc" class="block text-sm font-medium text-gray-700 mb-1">

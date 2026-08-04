@@ -27,13 +27,7 @@
                 <h4 class="text-[#550000] font-semibold text-lg mb-1">Expedientes</h4>
                 <p class="text-gray-500 text-sm">Crear, actualizar y gestionar expedientes.</p>
             </a>
-
-            <a href="{{ route('documentos.index') }}" class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-[#550000] hover:shadow-md transition">
-                <h4 class="text-[#550000] font-semibold text-lg mb-1">Documentos</h4>
-                <p class="text-gray-500 text-sm">Subir, organizar y validar documentos.</p>
-            </a>
-
-                        <a href="{{ route('funcionario.historial.index') }}" class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-[#550000] hover:shadow-md transition">
+            <a href="{{ route('funcionario.historial.index') }}" class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-[#550000] hover:shadow-md transition">
                 <h4 class="text-[#550000] font-semibold text-lg mb-1">Historial</h4>
                 <p class="text-gray-500 text-sm">Ver historial de cambios y trámites.</p>
             </a>

@@ -7,21 +7,9 @@
                 <h2 class="text-2xl font-bold text-[#1a2a4a]">Documentos por Cliente</h2>
                 <p class="text-sm text-gray-500">Busque un cliente por su cedula para ver sus documentos</p>
             </div>
-            <a href="{{ route('documentos.index') }}" 
+            <a href="{{ route('expedientes.index') }}" 
                class="mt-3 md:mt-0 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition shadow-sm flex items-center gap-2 text-sm font-medium">
-                Volver al Listado
-            </a>
-        </div>
-
-        {{-- PESTAÑAS --}}
-        <div class="flex flex-wrap gap-2 mb-4 border-b border-gray-200 pb-2">
-            <a href="{{ route('documentos.index') }}" 
-               class="px-4 py-2 rounded-lg text-sm font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300">
-                Todos los Documentos
-            </a>
-            <a href="{{ route('funcionario.documentos.buscar', ['cedula' => request('cedula')]) }}" 
-               class="px-4 py-2 rounded-lg text-sm font-medium transition bg-[#550000] text-white">
-                Documentos por Cliente
+                Volver a Expedientes
             </a>
         </div>
 
@@ -43,21 +31,6 @@
                 {{ session('error') }}
             </div>
         @endif
-
-        {{-- BUSCADOR --}}
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <form method="GET" action="{{ route('funcionario.documentos.buscar') }}" class="flex gap-2">
-                <input type="text" 
-                       name="cedula" 
-                       placeholder="Ingrese la cedula del cliente..." 
-                       required
-                       value="{{ request('cedula') }}" 
-                       class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-[#550000] focus:ring focus:ring-[#550000] focus:ring-opacity-50 px-4 py-2">
-                <button type="submit" class="bg-[#550000] hover:bg-[#6d0000] text-white px-6 py-2 rounded-lg transition font-medium">
-                    Buscar
-                </button>
-            </form>
-        </div>
 
         {{-- RESULTADOS --}}
         @if(request('cedula'))
@@ -85,17 +58,6 @@
                 </div>
 
                 @if($expediente)
-                    {{-- Botones de accion --}}
-                    <div class="flex flex-wrap gap-3 mb-6">
-                        <a href="{{ route('documentos.requerir', $expediente->id_expediente) }}" 
-                           class="bg-[#550000] hover:bg-[#6d0000] text-white px-6 py-3 rounded-lg transition font-medium flex items-center gap-2">
-                            Solicitar Documentos
-                        </a>
-                        <a href="{{ route('documentos.create', ['expediente' => $expediente->id_expediente, 'cedula' => $cliente->identificacion ?? '']) }}" 
-                           class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg transition font-medium flex items-center gap-2">
-                            Subir Documento (Empresa)
-                        </a>
-                    </div>
 
                     {{-- Pendientes de Aceptar --}}
                     <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
@@ -135,6 +97,7 @@
                                                     </a>
                                                     <form action="{{ route('documentos.validar', $doc->id_documento) }}" method="POST" class="inline">
                                                         @csrf @method('PATCH')
+                                                        <input type="hidden" name="cedula" value="{{ request('cedula') }}">
                                                         <input type="hidden" name="estado_doc" value="Validado">
                                                         <button type="submit" class="text-green-600 hover:text-green-800 text-xs font-medium transition"
                                                                 onclick="return confirm('¿Aceptar este documento?')">
@@ -181,15 +144,7 @@
                                         <tr class="border-b hover:bg-gray-50">
                                             <td class="px-4 py-2 font-medium">{{ $req->nombre ?? 'Documento' }}</td>
                                             <td class="px-4 py-2 text-center">
-                                                <div class="flex justify-center items-center gap-2">
-                                                    <form action="{{ route('documentos.solicitud.destroy', $req->Id_DocumentoRequerido) }}" method="POST" class="inline">
-                                                        @csrf @method('DELETE')
-                                                        <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium transition"
-                                                                onclick="return confirm('¿Eliminar esta solicitud de documento?')">
-                                                            Eliminar
-                                                        </button>
-                                                    </form>
-                                                </div>
+                                                <span class="text-gray-400 text-xs">Documento pendiente</span>
                                             </td>
                                         </tr>
                                         @endforeach
@@ -198,6 +153,7 @@
                             </div>
                         @endif
                     </div>
+
                     {{-- Subidos por Empresa --}}
                     <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
                         <div class="px-6 py-4 bg-blue-50 border-b border-blue-200">
@@ -230,8 +186,8 @@
                                             <td class="px-4 py-2 text-center">
                                                 <div class="flex justify-center items-center gap-2">
                                                     <a href="{{ Storage::url($doc->ruta_almac) }}" 
-                                                    target="_blank" 
-                                                    class="text-blue-600 hover:text-blue-800 text-xs font-medium transition">
+                                                       target="_blank" 
+                                                       class="text-blue-600 hover:text-blue-800 text-xs font-medium transition">
                                                         Ver
                                                     </a>
                                                     <form action="{{ route('documentos.destroy', $doc->id_documento) }}" method="POST" class="inline">
@@ -251,6 +207,7 @@
                             </div>
                         @endif
                     </div>
+
                     {{-- Rechazados --}}
                     <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
                         <div class="px-6 py-4 bg-red-100 border-b border-red-300">
@@ -372,6 +329,7 @@
                 <p class="text-sm text-gray-500 mb-4">Cambiar el estado de: <strong>{{ $doc->nombre_doc }}</strong></p>
                 <form action="{{ route('documentos.validar', $doc->id_documento) }}" method="POST">
                     @csrf @method('PATCH')
+                    <input type="hidden" name="cedula" value="{{ request('cedula') }}">
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
                         <select name="estado_doc" id="estado_select_{{ $doc->id_documento }}" 

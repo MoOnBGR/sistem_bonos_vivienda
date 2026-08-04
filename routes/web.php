@@ -69,8 +69,8 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
     Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
 
         // Documentos - Funcionario
-    Route::get('/documentos/cliente', [DocumentoController::class, 'buscarCliente'])->name('documentos.buscar');
-    Route::get('/documentos/subir/{id_expediente}', [DocumentoController::class, 'subirDocumentoEmpresa'])->name('documentos.subir');
+    Route::get('/documentos/cliente', [DocumentoController::class, 'buscarCliente'])->name('documentos.buscar');    
+    Route::get('/documentos/subir/{id_expediente}/{carpeta?}', [DocumentoController::class, 'subirDocumentoEmpresa'])->name('documentos.subir');
     Route::post('/documentos/subir-empresa', [DocumentoController::class, 'storeDocumentoEmpresa'])->name('documentos.subir-empresa');
 
     Route::get('/historial', [HistorialController::class, 'index'])->name('historial.index');
@@ -89,6 +89,26 @@ Route::post('/expedientes/{expediente}/carpetas', [ExpedienteCarpetaController::
 Route::put('/expedientes/carpetas/{carpeta}', [ExpedienteCarpetaController::class, 'update'])->name('expedientes.carpetas.update');
 Route::delete('/expedientes/carpetas/{carpeta}', [ExpedienteCarpetaController::class, 'destroy'])->name('expedientes.carpetas.destroy');
 
+// Subir documento a carpeta específica
+Route::post('/expedientes/{expediente}/carpetas/{carpeta}/documentos', [DocumentoController::class, 'subirDocumentoCarpeta'])
+    ->name('expedientes.carpetas.documentos.subir');
+
+
+// ==========================================
+// RUTAS PARA COPIAR/PEGAR (clic derecho)  <--- ¡AQUÍ DEBES COLOCARLAS!
+// ==========================================
+Route::post('/documentos/{id}/copiar', [DocumentoController::class, 'copiarDocumento'])
+    ->name('documentos.copiar');
+
+Route::post('/expedientes/{expediente}/pegar', [DocumentoController::class, 'pegarDocumento'])
+    ->name('documentos.pegar');
+
+Route::post('/documentos/cancelar-movimiento', [DocumentoController::class, 'cancelarMovimiento'])
+    ->name('documentos.cancelar-movimiento');
+
+// Mover documento a otra carpeta (método original)
+Route::patch('/documentos/{documento}/mover', [DocumentoController::class, 'moverDocumento'])
+    ->name('documentos.mover');
 // Rutas de Expediente
 
 Route::view('/expedientes/nuevo', 'expediente.buscar')
@@ -133,21 +153,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ==========================================
 
    // 1. PRIMERO: Rutas específicas (las que no son CRUD)
-    Route::get('/documentos/requerir/{id_expediente}', [DocumentoController::class, 'mostrarRequerir'])
-        ->name('documentos.requerir');
-
-    Route::post('/documentos/requerir', [DocumentoController::class, 'requerirDocumento'])
-        ->name('documentos.requerir.post');
 
     Route::patch('/documentos/{id}/validar', [DocumentoController::class, 'update'])
         ->name('documentos.validar');
 
+    
+
     // 2. DESPUÉS: Resource (el CRUD)
     Route::resource('documentos', DocumentoController::class);
 
-    // 3. Eliminar solicitud de documento
-    Route::delete('/documentos/solicitud/{id}', [DocumentoController::class, 'eliminarSolicitud'])
-        ->name('documentos.solicitud.destroy');
 });
 
 // Rutas de Cliente

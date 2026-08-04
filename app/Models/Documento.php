@@ -23,6 +23,7 @@ class Documento extends Model
         'estado_doc',
         'fecha_subida',
         'es_duplicado',
+        'id_carpeta', // <--- ¡AGREGADO!
     ];
 
     protected $casts = [
@@ -43,5 +44,13 @@ class Documento extends Model
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class, 'Id_Cliente', 'Id_Cliente');
+    }
+
+    // ==========================================
+    // RELACIÓN CON CARPETA (AGREGADA)
+    // ==========================================
+    public function carpeta(): BelongsTo
+    {
+        return $this->belongsTo(Carpeta::class, 'id_carpeta', 'id_carpeta');
     }
 }

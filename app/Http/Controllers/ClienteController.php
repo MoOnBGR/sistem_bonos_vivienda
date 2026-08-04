@@ -28,17 +28,25 @@ class ClienteController extends Controller
             'direccion' => 'required|string',
             'correo' => 'required|email|max:150',
         ]);
- 
+
         $validated['Id_user'] = auth()->id();
         $validated['estado'] = 'Activo';
- 
-        Cliente::create($validated);
+
+        $cliente = Cliente::create($validated);
+
+        // Asignar todos los documentos requeridos al cliente
+        $documentosCatalogo = DocumentoRequerido::all();
+        foreach ($documentosCatalogo as $doc) {
+            $cliente->documentosRequeridosAsignados()->create([
+                'Id_DocumentoRequerido' => $doc->Id_DocumentoRequerido,
+            ]);
+        }
 
         \App\Helpers\Historial::registrar('Clientes', 'Crear', 'Se registró el cliente: ' . $validated['nombre'] . ' ' . $validated['apellidos']);
- 
+
         return redirect()->route('dashboard');
     }
- 
+    
     public function buscar(Request $request)
     {
         $clientes = null;

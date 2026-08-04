@@ -21,7 +21,7 @@
                 <p class="text-gray-500 text-sm">Consulte el estado actual de su solicitud de bono.</p>
             </a>
 
-            <a href="#" class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-[#550000] hover:shadow-md transition">
+            <a href="{{ route('cliente.documentos') }}" class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-[#550000] hover:shadow-md transition">
                 <h4 class="text-[#550000] font-semibold text-lg mb-1">Mis Documentos</h4>
                 <p class="text-gray-500 text-sm">Consulte los documentos necesarios de su expediente.</p>
             </a>
