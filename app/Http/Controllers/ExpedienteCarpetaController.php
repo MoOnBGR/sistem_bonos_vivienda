@@ -8,10 +8,6 @@ use Illuminate\Http\Request;
 
 class ExpedienteCarpetaController extends Controller
 {
-    /**
-     * Muestra el contenido de un expediente: si $carpeta es null, muestra la raíz
-     * (subcarpetas y documentos sin carpeta). Si $carpeta viene, muestra su contenido.
-     */
     public function index(Expediente $expediente, ?Carpeta $carpeta = null)
     {
         $expediente->load('cliente', 'funcionario');
@@ -42,9 +38,6 @@ class ExpedienteCarpetaController extends Controller
         ]);
     }
 
-    /**
-     * Crea una nueva carpeta dentro del expediente.
-     */
     public function store(Request $request, Expediente $expediente)
     {
         $request->validate([
@@ -52,34 +45,42 @@ class ExpedienteCarpetaController extends Controller
             'id_carpeta_padre' => 'nullable|exists:carpetas_expedientes,id_carpeta',
         ]);
 
-        Carpeta::create([
+        $carpeta = Carpeta::create([
             'id_expediente' => $expediente->id_expediente,
             'id_carpeta_padre' => $request->id_carpeta_padre,
             'nombre' => $request->nombre,
         ]);
 
+        \App\Helpers\Historial::registrar(
+            'Carpetas',
+            'Crear',
+            'Se creó la carpeta "' . $carpeta->nombre . '" en el expediente EXP-' . str_pad($expediente->id_expediente, 4, '0', STR_PAD_LEFT),
+            $expediente->id_expediente
+        );
+
         return back()->with('success', 'Carpeta creada correctamente.');
     }
 
-    /**
-     * Muestra el formulario para renombrar una carpeta (página independiente,
-     * en vez de modal, ya que el modal daba problemas de clic en algunos equipos).
-     */
     public function edit(Carpeta $carpeta)
     {
         return view('expediente.carpeta-editar', compact('carpeta'));
     }
 
-    /**
-     * Renombra una carpeta del expediente.
-     */
     public function update(Request $request, Carpeta $carpeta)
     {
         $request->validate([
             'nombre' => 'required|string|max:100',
         ]);
 
+        $nombreAnterior = $carpeta->nombre;
         $carpeta->update(['nombre' => $request->nombre]);
+
+        \App\Helpers\Historial::registrar(
+            'Carpetas',
+            'Renombrar',
+            'Se renombró la carpeta "' . $nombreAnterior . '" a "' . $request->nombre . '" en el expediente EXP-' . str_pad($carpeta->id_expediente, 4, '0', STR_PAD_LEFT),
+            $carpeta->id_expediente
+        );
 
         return redirect()
             ->route('expedientes.carpetas.index', [
@@ -89,12 +90,19 @@ class ExpedienteCarpetaController extends Controller
             ->with('success', 'Carpeta renombrada correctamente.');
     }
 
-    /**
-     * Elimina una carpeta del expediente.
-     */
     public function destroy(Carpeta $carpeta)
     {
+        $nombre = $carpeta->nombre;
+        $expedienteId = $carpeta->id_expediente;
+
         $carpeta->delete();
+
+        \App\Helpers\Historial::registrar(
+            'Carpetas',
+            'Eliminar',
+            'Se eliminó la carpeta "' . $nombre . '" del expediente EXP-' . str_pad($expedienteId, 4, '0', STR_PAD_LEFT),
+            $expedienteId
+        );
 
         return back()->with('success', 'Carpeta eliminada correctamente.');
     }

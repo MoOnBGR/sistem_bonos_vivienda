@@ -11,7 +11,6 @@
         modalSubirDocumento: false, 
         modalMoverDocumento: null 
     }">
-    <div class="expediente-container" x-data="{ modalNuevaCarpeta: false }">
 
         <!-- Pestañas de navegación -->
         <div class="flex gap-2 mb-6 border-b border-gray-200 pb-4">
@@ -72,7 +71,7 @@
             </a>
         </div>
 
-        <!-- Breadcrumb de carpetas del expediente -->
+        <!-- Breadcrumb -->
         <div class="flex items-center flex-wrap gap-1 text-sm mb-4">
             <a href="{{ route('expedientes.carpetas.index', $expediente->id_expediente) }}"
                class="text-[#550000] font-medium hover:underline">
@@ -87,7 +86,7 @@
             @endforeach
         </div>
 
-        <!-- Carpetas del expediente -->
+        <!-- Carpetas -->
         <div class="flex items-center justify-between mb-2">
             <h4 class="font-semibold text-gray-700">Carpetas</h4>
             <button type="button" @click="modalNuevaCarpeta = true"
@@ -104,7 +103,8 @@
                         📁 <span class="truncate">{{ $carpetaItem->nombre }}</span>
                     </a>
                     <div class="flex gap-3 mt-2 text-xs">
-                        <button type="button" @click="modalRenombrar = { id: {{ $carpetaItem->id_carpeta }}, nombre: '{{ $carpetaItem->nombre }}' }"
+                        <button type="button"
+                                onclick="renombrarCarpeta({{ $carpetaItem->id_carpeta }}, '{{ addslashes($carpetaItem->nombre) }}')"
                                 class="text-[#550000] hover:underline bg-transparent">
                             Editar
                         </button>
@@ -123,8 +123,6 @@
             @endforelse
         </div>
 
-        
-
         @php
             $volverUrl = $carpetaActual
                 ? ($carpetaActual->id_carpeta_padre
@@ -133,7 +131,7 @@
                 : route('expedientes.index');
         @endphp
 
-        <div class="flex gap-3">
+        <div class="flex gap-3 mb-6">
             <a href="{{ $volverUrl }}" class="expediente-btn expediente-btn-secundario">
                 Volver
             </a>
@@ -161,31 +159,8 @@
             </div>
         </div>
 
-        <!-- Modal: Renombrar carpeta -->
-        <template x-if="modalRenombrar">
-            <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                <div class="bg-white rounded-lg p-6 w-full max-w-sm" @click.outside="modalRenombrar = null">
-                    <h4 class="font-semibold text-gray-700 mb-4">Renombrar carpeta</h4>
-                    <form method="POST" :action="'/expedientes/carpetas/' + modalRenombrar.id">
-                        @csrf
-                        @method('PUT')
-                        <input type="text" name="nombre" x-model="modalRenombrar.nombre" required
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4">
-                        <div class="flex gap-3 justify-end">
-                            <button type="button" @click="modalRenombrar = null"
-                                    class="text-gray-500 hover:underline bg-transparent">Cancelar</button>
-                            <button type="submit"
-                                    class="text-[#550000] font-medium hover:underline bg-transparent">Guardar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </template>
-
-               @if ($carpetaActual)
-            <!-- ========================================== -->
-            <!-- DOCUMENTOS DENTRO DE LA CARPETA            -->
-            <!-- ========================================== -->
+        @if ($carpetaActual)
+            <!-- DOCUMENTOS DENTRO DE LA CARPETA -->
             <div class="flex items-center justify-between mb-2">
                 <h4 class="font-semibold text-gray-700">
                     Documentos en "{{ $carpetaActual->nombre }}"
@@ -194,8 +169,8 @@
                     @if(session('documento_a_mover'))
                         <button type="button" 
                                 id="btnPegar"
-                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                             Pegar documento
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                            📋 Pegar documento
                         </button>
                         <button type="button" 
                                 id="btnCancelarPegar"
@@ -215,11 +190,13 @@
                 @php
                     $docId = session('documento_a_mover');
                     $docPendiente = \App\Models\Documento::find($docId);
+                    $tipoOperacion = session('tipo_operacion', 'cortar');
                 @endphp
                 @if($docPendiente)
                     <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-3 mb-4 rounded-lg text-sm">
-                        <strong> Documento en espera:</strong> {{ $docPendiente->nombre_doc }} 
-                        - Haz clic en <strong>"Pegar documento"</strong> para moverlo a esta carpeta
+                        <strong>{{ $tipoOperacion === 'copiar' ? '📋 Copiando' : '✂️ Moviendo' }}:</strong> 
+                        "{{ $docPendiente->nombre_doc }}" 
+                        — Navega a la carpeta destino y haz clic en <strong>"Pegar documento"</strong>
                     </div>
                 @endif
             @endif
@@ -250,14 +227,22 @@
                             <td class="py-2 pr-4 text-right">
                                 <div class="flex justify-end items-center gap-2">
                                     <button type="button" 
-                                            class="btn-copiar text-blue-600 hover:text-blue-800 font-medium transition text-sm"
+                                            class="btn-accion text-blue-600 hover:text-blue-800 font-medium transition text-sm"
                                             data-id="{{ $documento->id_documento }}"
-                                            data-nombre="{{ $documento->nombre_doc }}">
+                                            data-nombre="{{ $documento->nombre_doc }}"
+                                            data-tipo="copiar">
                                         Copiar
+                                    </button>
+                                    <button type="button" 
+                                            class="btn-accion text-yellow-600 hover:text-yellow-800 font-medium transition text-sm"
+                                            data-id="{{ $documento->id_documento }}"
+                                            data-nombre="{{ $documento->nombre_doc }}"
+                                            data-tipo="cortar">
+                                        Cortar
                                     </button>
                                     <a href="{{ Storage::url($documento->ruta_almac) }}" 
                                        target="_blank" 
-                                       class="text-blue-600 hover:text-blue-800 font-medium transition text-sm">
+                                       class="text-gray-600 hover:text-gray-800 font-medium transition text-sm">
                                         Ver
                                     </a>
                                 </div>
@@ -274,31 +259,7 @@
                 </table>
             </div>
 
-            <!-- ========================================== -->
-            <!-- MENÚ CONTEXTUAL (CLIC DERECHO)             -->
-            <!-- ========================================== -->
-            <div id="contextMenu" 
-                 class="fixed z-50 hidden bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[180px]"
-                 style="display: none;">
-                <button id="contextCopiar" 
-                        class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition flex items-center gap-2">
-                    Copiar documento
-                </button>
-                <hr class="my-1 border-gray-200">
-                <button id="contextVer" 
-                        class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition flex items-center gap-2">
-                    Ver documento
-                </button>
-                <hr class="my-1 border-gray-200">
-                <button id="contextCancelar" 
-                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition flex items-center gap-2">
-                    Cancelar
-                </button>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- MODAL: SUBIR DOCUMENTO A CARPETA           -->
-            <!-- ========================================== -->
+            <!-- MODAL: SUBIR DOCUMENTO A CARPETA -->
             <div x-show="modalSubirDocumento" x-cloak
                  class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                 <div class="bg-white rounded-lg p-6 w-full max-w-md" @click.outside="modalSubirDocumento = false">
@@ -339,133 +300,143 @@
                 </div>
             </div>
         @endif
-       <script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log(' JavaScript cargado correctamente');
-    
-    // ==========================================
-    // BOTÓN COPIAR
-    // ==========================================
-    document.querySelectorAll('.btn-copiar').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const id = this.getAttribute('data-id');
-            const nombre = this.getAttribute('data-nombre');
-            
-            console.log(' Hiciste clic en COPIAR - Documento ID:', id);
-            console.log(' Nombre:', nombre);
-            
-            // Obtener el token CSRF
-            const token = document.querySelector('meta[name="csrf-token"]');
-            if (!token) {
-                console.error(' No se encontró el token CSRF');
-                alert('Error: No se encontró el token de seguridad');
-                return;
+
+        <script>
+        // ==========================================
+        // RENOMBRAR CARPETA
+        // ==========================================
+        function renombrarCarpeta(id, nombreActual) {
+            const nuevoNombre = prompt('Nuevo nombre de la carpeta:', nombreActual);
+            if (!nuevoNombre || nuevoNombre.trim() === '' || nuevoNombre === nombreActual) return;
+
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/expedientes/carpetas/' + id;
+            form.innerHTML = `
+                <input name="_token" value="${token}">
+                <input name="_method" value="PUT">
+                <input name="nombre" value="${nuevoNombre.trim()}">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // ==========================================
+            // BOTONES COPIAR Y CORTAR
+            // ==========================================
+            document.querySelectorAll('.btn-accion').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const id = this.getAttribute('data-id');
+                    const nombre = this.getAttribute('data-nombre');
+                    const tipo = this.getAttribute('data-tipo');
+                    
+                    const token = document.querySelector('meta[name="csrf-token"]');
+                    if (!token) {
+                        alert('Error: No se encontró el token de seguridad');
+                        return;
+                    }
+                    
+                    fetch('/documentos/' + id + '/copiar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token.getAttribute('content')
+                        },
+                        body: JSON.stringify({ tipo: tipo })
+                    })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.success) {
+                            if (tipo === 'copiar') {
+                                alert('Documento "' + nombre + '" copiado. Navega a la carpeta destino y haz clic en "Pegar documento".');
+                            } else {
+                                alert('Documento "' + nombre + '" listo para mover. Navega a la carpeta destino y haz clic en "Pegar documento".');
+                            }
+                            location.reload();
+                        } else {
+                            alert('Error: ' + (data.message || 'No se pudo procesar'));
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('Error:', error);
+                        alert('Error al procesar el documento.');
+                    });
+                });
+            });
+
+            // ==========================================
+            // BOTÓN PEGAR
+            // ==========================================
+            const btnPegar = document.getElementById('btnPegar');
+            if (btnPegar) {
+                btnPegar.addEventListener('click', function() {
+                    const carpetaId = {{ $carpetaActual->id_carpeta ?? 'null' }};
+                    const expedienteId = {{ $expediente->id_expediente }};
+                    const token = document.querySelector('meta[name="csrf-token"]');
+                    
+                    fetch('/expedientes/' + expedienteId + '/pegar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token.getAttribute('content')
+                        },
+                        body: JSON.stringify({ id_carpeta_destino: carpetaId })
+                    })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert('Error: ' + (data.error || 'No se pudo pegar el documento'));
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('Error:', error);
+                        alert('Error al pegar el documento');
+                    });
+                });
             }
-            
-            // Hacer la petición
-            fetch('/documentos/' + id + '/copiar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token.getAttribute('content')
-                }
-            })
-            .then(function(response) {
-                console.log(' Respuesta recibida, status:', response.status);
-                return response.json();
-            })
-            .then(function(data) {
-                console.log(' Datos recibidos:', data);
-                if (data.success) {
-                    console.log(' Recargando página...');
-                    location.reload();
-                } else {
-                    alert('Error al copiar el documento: ' + data.message);
-                }
-            })
-            .catch(function(error) {
-                console.error(' Error en la petición:', error);
-                alert('Error al copiar el documento. Revisa la consola.');
-            });
+
+            // ==========================================
+            // BOTÓN CANCELAR
+            // ==========================================
+            const btnCancelarPegar = document.getElementById('btnCancelarPegar');
+            if (btnCancelarPegar) {
+                btnCancelarPegar.addEventListener('click', function() {
+                    const token = document.querySelector('meta[name="csrf-token"]');
+                    fetch('/documentos/cancelar-movimiento', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token.getAttribute('content')
+                        }
+                    })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('Error:', error);
+                    });
+                });
+            }
         });
-    });
-    
-    // ==========================================
-    // BOTÓN PEGAR
-    // ==========================================
-    const btnPegar = document.getElementById('btnPegar');
-    if (btnPegar) {
-        console.log(' Botón "Pegar" encontrado');
-        btnPegar.addEventListener('click', function() {
-            const carpetaId = {{ $carpetaActual->id_carpeta ?? 'null' }};
-            const expedienteId = {{ $expediente->id_expediente }};
-            
-            console.log(' Hiciste clic en PEGAR - Carpeta destino:', carpetaId);
-            
-            const token = document.querySelector('meta[name="csrf-token"]');
-            
-            fetch('/expedientes/' + expedienteId + '/pegar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token.getAttribute('content')
-                },
-                body: JSON.stringify({ 
-                    id_carpeta_destino: carpetaId 
-                })
-            })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                console.log(' Respuesta pegar:', data);
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error: ' + (data.error || 'No se pudo mover el documento'));
-                }
-            })
-            .catch(function(error) {
-                console.error(' Error:', error);
-                alert('Error al pegar el documento');
-            });
-        });
-    } else {
-        console.log(' Botón "Pegar" NO encontrado (normal si no hay documento en sesión)');
-    }
-    
-    // ==========================================
-    // BOTÓN CANCELAR PEGAR
-    // ==========================================
-    const btnCancelarPegar = document.getElementById('btnCancelarPegar');
-    if (btnCancelarPegar) {
-        btnCancelarPegar.addEventListener('click', function() {
-            const token = document.querySelector('meta[name="csrf-token"]');
-            fetch('/documentos/cancelar-movimiento', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token.getAttribute('content')
-                }
-            })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                if (data.success) {
-                    location.reload();
-                }
-            })
-            .catch(function(error) {
-                console.error(' Error:', error);
-            });
-        });
-    }
-    
-    console.log(' JavaScript completamente cargado');
-});
-</script>
+        </script>
+    </div>
 </x-app-layout>

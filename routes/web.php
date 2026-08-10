@@ -34,30 +34,32 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
         }
         return view('funcionario.dashboard');
     })->name('dashboard');
+
     Route::get('/crear-funcionario', function () {
-    if (Auth::user()->tipo_usuario !== 'Funcionario') {
-        abort(403);
-    }
-    return view('funcionario.crear_funcionario');
+        if (Auth::user()->tipo_usuario !== 'Funcionario') {
+            abort(403);
+        }
+        return view('funcionario.crear_funcionario');
     })->name('crear');
+
     Route::post('/crear-funcionario', function (Request $request) {
-    if (Auth::user()->tipo_usuario !== 'Funcionario') {
-        abort(403);
-    }
-    $request->validate([
-        'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-        'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
-    ]);
+        if (Auth::user()->tipo_usuario !== 'Funcionario') {
+            abort(403);
+        }
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
+        ]);
 
-    \App\Models\User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-        'tipo_usuario' => 'Funcionario',
-    ]);
+        \App\Models\User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'tipo_usuario' => 'Funcionario',
+        ]);
 
-    return back()->with('success', '¡Funcionario creado exitosamente!');
+        return back()->with('success', '¡Funcionario creado exitosamente!');
     })->name('funcionarios.store');
 
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
@@ -68,8 +70,8 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
     Route::put('/clientes/{cliente}', [ClienteController::class, 'updateFuncionario'])->name('clientes.actualizar');
     Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
 
-        // Documentos - Funcionario
-    Route::get('/documentos/cliente', [DocumentoController::class, 'buscarCliente'])->name('documentos.buscar');    
+    // Documentos - Funcionario
+    Route::get('/documentos/cliente', [DocumentoController::class, 'buscarCliente'])->name('documentos.buscar');
     Route::get('/documentos/subir/{id_expediente}/{carpeta?}', [DocumentoController::class, 'subirDocumentoEmpresa'])->name('documentos.subir');
     Route::post('/documentos/subir-empresa', [DocumentoController::class, 'storeDocumentoEmpresa'])->name('documentos.subir-empresa');
 
@@ -81,9 +83,7 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
     Route::post('/notificaciones', [NotificacionController::class, 'store'])->name('notificaciones.store');
 });
 
-
-//Rutas de Carpeta dentro de Expediente
-
+// Rutas de Carpeta dentro de Expediente
 Route::get('/expedientes/{expediente}/carpetas/{carpeta?}', [ExpedienteCarpetaController::class, 'index'])->name('expedientes.carpetas.index');
 Route::post('/expedientes/{expediente}/carpetas', [ExpedienteCarpetaController::class, 'store'])->name('expedientes.carpetas.store');
 Route::get('/expedientes/carpetas/{carpeta}/editar', [ExpedienteCarpetaController::class, 'edit'])->name('expedientes.carpetas.editar');
@@ -94,75 +94,42 @@ Route::delete('/expedientes/carpetas/{carpeta}', [ExpedienteCarpetaController::c
 Route::post('/expedientes/{expediente}/carpetas/{carpeta}/documentos', [DocumentoController::class, 'subirDocumentoCarpeta'])
     ->name('expedientes.carpetas.documentos.subir');
 
-
-// ==========================================
-// RUTAS PARA COPIAR/PEGAR (clic derecho)  <--- ¡AQUÍ DEBES COLOCARLAS!
-// ==========================================
+// Copiar/Pegar/Cancelar documentos
+Route::post('/documentos/cancelar-movimiento', [DocumentoController::class, 'cancelarMovimiento'])
+    ->name('documentos.cancelar-movimiento');
 Route::post('/documentos/{id}/copiar', [DocumentoController::class, 'copiarDocumento'])
     ->name('documentos.copiar');
-
 Route::post('/expedientes/{expediente}/pegar', [DocumentoController::class, 'pegarDocumento'])
     ->name('documentos.pegar');
 
-Route::post('/documentos/cancelar-movimiento', [DocumentoController::class, 'cancelarMovimiento'])
-    ->name('documentos.cancelar-movimiento');
-
-// Mover documento a otra carpeta (método original)
+// Mover documento
 Route::patch('/documentos/{documento}/mover', [DocumentoController::class, 'moverDocumento'])
     ->name('documentos.mover');
+
 // Rutas de Expediente
-
-Route::view('/expedientes/nuevo', 'expediente.buscar')
-    ->name('expedientes.crear.buscar');
-
-Route::post('/expedientes/buscar-crear', [ExpedienteController::class, 'buscarParaCrear'])
-    ->name('expedientes.buscarCrear');
-
-Route::get('/expedientes', [ExpedienteController::class, 'index'])
-    ->name('expedientes.index');
+Route::view('/expedientes/nuevo', 'expediente.buscar')->name('expedientes.crear.buscar');
+Route::post('/expedientes/buscar-crear', [ExpedienteController::class, 'buscarParaCrear'])->name('expedientes.buscarCrear');
+Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('expedientes.index');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/expedientes/buscar', [ExpedienteController::class, 'buscarPorCedula'])
-        ->name('expedientes.buscar');
+    Route::post('/expedientes/buscar', [ExpedienteController::class, 'buscarPorCedula'])->name('expedientes.buscar');
+    Route::get('/expedientes/crear/{cliente}', [ExpedienteController::class, 'create'])->name('expedientes.crear');
+    Route::post('/expedientes', [ExpedienteController::class, 'store'])->name('expedientes.store');
+    Route::get('/expedientes/{expediente}/confirmacion', [ExpedienteController::class, 'confirmacion'])->name('expedientes.confirmacion');
+    Route::get('/expedientes/cliente/{cliente}', [ExpedienteController::class, 'consultarPorCliente'])->name('expedientes.consultar');
+    Route::get('/expedientes/{expediente}/editar', [ExpedienteController::class, 'edit'])->name('expedientes.editar');
+    Route::put('/expedientes/{expediente}', [ExpedienteController::class, 'update'])->name('expedientes.update');
+    Route::post('/expedientes/{expediente}/cerrar', [ExpedienteController::class, 'cerrar'])->name('expedientes.cerrar');
+    Route::post('/expedientes/{expediente}/reabrir', [ExpedienteController::class, 'reabrir'])->name('expedientes.reabrir');
 
-    Route::get('/expedientes/crear/{cliente}', [ExpedienteController::class, 'create'])
-        ->name('expedientes.crear');
-
-    Route::post('/expedientes', [ExpedienteController::class, 'store'])
-        ->name('expedientes.store');
-
-    Route::get('/expedientes/{expediente}/confirmacion', [ExpedienteController::class, 'confirmacion'])
-    ->name('expedientes.confirmacion');
-
-    Route::get('/expedientes/cliente/{cliente}', [ExpedienteController::class, 'consultarPorCliente'])
-        ->name('expedientes.consultar');
-
-    Route::get('/expedientes/{expediente}/editar', [ExpedienteController::class, 'edit'])
-        ->name('expedientes.editar');
-
-    Route::put('/expedientes/{expediente}', [ExpedienteController::class, 'update'])
-        ->name('expedientes.update');
-
-    Route::post('/expedientes/{expediente}/cerrar', [ExpedienteController::class, 'cerrar'])
-        ->name('expedientes.cerrar');
-
-    Route::post('/expedientes/{expediente}/reabrir', [ExpedienteController::class, 'reabrir'])
-        ->name('expedientes.reabrir');
-    
-    // ==========================================
     // MÓDULO DE DOCUMENTOS - Naraly
-    // ==========================================
+    Route::get('/documentos/requerir/{id_expediente}', [DocumentoController::class, 'mostrarRequerir'])->name('documentos.requerir');
+    Route::post('/documentos/requerir', [DocumentoController::class, 'requerirDocumento'])->name('documentos.requerir.post');
+    Route::patch('/documentos/{id}/validar', [DocumentoController::class, 'update'])->name('documentos.validar');
+    Route::delete('/documentos/solicitud/{id}', [DocumentoController::class, 'eliminarSolicitud'])->name('documentos.solicitud.destroy');
 
-   // 1. PRIMERO: Rutas específicas (las que no son CRUD)
-
-    Route::patch('/documentos/{id}/validar', [DocumentoController::class, 'update'])
-        ->name('documentos.validar');
-
-    
-
-    // 2. DESPUÉS: Resource (el CRUD)
+    // Resource DESPUÉS
     Route::resource('documentos', DocumentoController::class);
-
 });
 
 // Rutas de Cliente
@@ -173,11 +140,10 @@ Route::middleware(['auth', 'verified', 'cliente.completo'])->prefix('cliente')->
         }
         return view('cliente.dashboard');
     })->name('dashboard');
-        // Documentos - Cliente
+
     Route::get('/documentos', [DocumentoController::class, 'misDocumentos'])->name('documentos');
     Route::post('/documentos/subir', [DocumentoController::class, 'subirDocumentoCliente'])->name('documentos.subir');
-    Route::delete('/documentos/eliminar/{id}', [DocumentoController::class, 'eliminarDocumentoCliente'])
-    ->name('documentos.eliminar');
+    Route::delete('/documentos/eliminar/{id}', [DocumentoController::class, 'eliminarDocumentoCliente'])->name('documentos.eliminar');
 });
 
 // Perfil
@@ -186,7 +152,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/datos-adicionales', [ClienteController::class, 'create'])->name('cliente.datos');

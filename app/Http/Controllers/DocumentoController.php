@@ -604,16 +604,19 @@ class DocumentoController extends Controller
     // ==========================================
     // COPIAR DOCUMENTO (guardar en sesión)
     // ==========================================
-    public function copiarDocumento(Request $request, $id)
+        public function copiarDocumento(Request $request, $id)
     {
         $documento = Documento::findOrFail($id);
+        $tipo = $request->input('tipo', 'cortar');
         
-        // Guardar en sesión el documento a mover
-        session(['documento_a_mover' => $id]);
+        session([
+            'documento_a_mover' => $id,
+            'tipo_operacion' => $tipo
+        ]);
         
         return response()->json([
             'success' => true,
-            'message' => 'Documento copiado para mover',
+            'message' => $tipo === 'copiar' ? 'Documento listo para copiar' : 'Documento listo para mover',
             'documento' => $documento->nombre_doc
         ]);
     }
@@ -621,59 +624,65 @@ class DocumentoController extends Controller
     // ==========================================
     // PEGAR DOCUMENTO (mover a carpeta actual)
     // ==========================================
-    public function pegarDocumento(Request $request, $expedienteId)
-    {
-        $documentoId = session('documento_a_mover');
-        
-        if (!$documentoId) {
-            return response()->json([
-                'error' => 'No hay documento para pegar'
-            ], 400);
-        }
-        
-        $documento = Documento::findOrFail($documentoId);
-        
-        // Validar que el documento pertenezca al expediente
-        if ($documento->id_expediente != $expedienteId) {
-            return response()->json([
-                'error' => 'El documento no pertenece a este expediente'
-            ], 400);
-        }
-        
-        // Obtener la carpeta actual desde la vista
-        $carpetaId = $request->input('id_carpeta_destino');
-        
-        // Si no se especifica carpeta, se mueve a la raíz (null)
-        $carpetaDestino = $carpetaId ?: null;
-        
-        // Guardar datos para historial
-        $carpetaOrigen = $documento->id_carpeta;
-        $nombreCarpetaOrigen = $carpetaOrigen ? 
-            \App\Models\Carpeta::find($carpetaOrigen)?->nombre : 'Raíz';
-        $nombreCarpetaDestino = $carpetaDestino ? 
-            \App\Models\Carpeta::find($carpetaDestino)?->nombre : 'Raíz';
-        
-        // Mover el documento
-        $documento->id_carpeta = $carpetaDestino;
-        $documento->save();
-        
-        // Limpiar sesión
-        session()->forget('documento_a_mover');
-        
+   public function pegarDocumento(Request $request, $expedienteId)
+{
+    $documentoId = session('documento_a_mover');
+    $tipo = session('tipo_operacion', 'cortar');
+    
+    if (!$documentoId) {
+        return response()->json(['error' => 'No hay documento para pegar'], 400);
+    }
+    
+    $documento = Documento::findOrFail($documentoId);
+    $carpetaId = $request->input('id_carpeta_destino');
+    $carpetaDestino = $carpetaId ?: null;
+    
+    $carpetaOrigen = $documento->id_carpeta;
+    $nombreCarpetaOrigen = $carpetaOrigen ? Carpeta::find($carpetaOrigen)?->nombre : 'Raíz';
+    $nombreCarpetaDestino = $carpetaDestino ? Carpeta::find($carpetaDestino)?->nombre : 'Raíz';
+
+    if ($tipo === 'copiar') {
+        // Duplicar archivo físico
+        $extension = pathinfo($documento->ruta_almac, PATHINFO_EXTENSION);
+        $nuevaRuta = 'documentos/' . uniqid() . '.' . $extension;
+        Storage::disk('public')->copy($documento->ruta_almac, $nuevaRuta);
+
+        Documento::create([
+            'id_expediente' => $documento->id_expediente,
+            'id_funcionario' => auth()->id(),
+            'Id_Cliente' => $documento->Id_Cliente,
+            'nombre_doc' => $documento->nombre_doc . ' (copia)',
+            'tipo_doc' => $documento->tipo_doc,
+            'ruta_almac' => $nuevaRuta,
+            'estado_doc' => $documento->estado_doc,
+            'es_duplicado' => true,
+            'id_carpeta' => $carpetaDestino,
+        ]);
+
         \App\Helpers\Historial::registrar(
-            'Documentos',
-            'Mover (Copiar/Pegar)',
-            'Se movió el documento: ' . $documento->nombre_doc . 
-            ' de "' . $nombreCarpetaOrigen . '" a "' . $nombreCarpetaDestino . '"',
+            'Documentos', 'Copiar',
+            'Se copió "' . $documento->nombre_doc . '" de "' . $nombreCarpetaOrigen . '" a "' . $nombreCarpetaDestino . '"',
             $documento->id_expediente
         );
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Documento movido correctamente',
-            'documento' => $documento->nombre_doc
-        ]);
+
+        session()->forget(['documento_a_mover', 'tipo_operacion']);
+        return response()->json(['success' => true, 'message' => 'Documento copiado correctamente.']);
+
+    } else {
+        // Mover documento
+        $documento->id_carpeta = $carpetaDestino;
+        $documento->save();
+
+        \App\Helpers\Historial::registrar(
+            'Documentos', 'Mover',
+            'Se movió "' . $documento->nombre_doc . '" de "' . $nombreCarpetaOrigen . '" a "' . $nombreCarpetaDestino . '"',
+            $documento->id_expediente
+        );
+
+        session()->forget(['documento_a_mover', 'tipo_operacion']);
+        return response()->json(['success' => true, 'message' => 'Documento movido correctamente.']);
     }
+}
 
     // ==========================================
     // CANCELAR MOVIMIENTO
