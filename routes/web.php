@@ -144,6 +144,25 @@ Route::middleware(['auth', 'verified', 'cliente.completo'])->prefix('cliente')->
     Route::get('/documentos', [DocumentoController::class, 'misDocumentos'])->name('documentos');
     Route::post('/documentos/subir', [DocumentoController::class, 'subirDocumentoCliente'])->name('documentos.subir');
     Route::delete('/documentos/eliminar/{id}', [DocumentoController::class, 'eliminarDocumentoCliente'])->name('documentos.eliminar');
+
+    Route::get('/tramite', function () {
+        $cliente = Auth::user()->cliente;
+        if (!$cliente) {
+            return redirect()->route('cliente.datos');
+        }
+        $expediente = \App\Models\Expediente::where('Id_Cliente', $cliente->Id_Cliente)
+            ->with(['funcionario'])
+            ->latest('fecha_creacion')
+            ->first();
+
+        $documentos = $expediente
+            ? \App\Models\Documento::where('id_expediente', $expediente->id_expediente)
+                ->where('Id_Cliente', $cliente->Id_Cliente)
+                ->get()
+            : collect();
+
+        return view('cliente.tramite', compact('cliente', 'expediente', 'documentos'));
+    })->name('tramite');
 });
 
 // Perfil
