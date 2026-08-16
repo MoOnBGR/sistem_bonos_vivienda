@@ -75,6 +75,7 @@
                                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 Historial
+
                             </a>
 
                             <!-- Notificaciones -->
@@ -88,15 +89,14 @@
                                 Notificaciones
                             </a>
 
-                                                        <!-- Crear Funcionario -->
-                            <a href="{{ route('funcionario.crear') }}"
+                             <a href="{{ route('funcionario.funcionarios.index') }}"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
-                                {{ request()->routeIs('funcionario.crear') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                                {{ request()->routeIs('funcionario.funcionarios.*') ? 'bg-[#550000] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                                 </svg>
-                                Crear Funcionario
+                                Funcionarios
                             </a>
 
                 @else

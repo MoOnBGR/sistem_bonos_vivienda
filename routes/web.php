@@ -35,6 +35,15 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
         return view('funcionario.dashboard');
     })->name('dashboard');
 
+    // Gestión de Funcionarios
+    Route::get('/funcionarios', function () {
+        if (Auth::user()->tipo_usuario !== 'Funcionario') {
+            abort(403);
+        }
+        $funcionarios = \App\Models\User::where('tipo_usuario', 'Funcionario')->get();
+        return view('funcionario.funcionarios.index', compact('funcionarios'));
+    })->name('funcionarios.index');
+
     Route::get('/crear-funcionario', function () {
         if (Auth::user()->tipo_usuario !== 'Funcionario') {
             abort(403);
@@ -59,8 +68,63 @@ Route::middleware(['auth', 'verified'])->prefix('funcionario')->name('funcionari
             'tipo_usuario' => 'Funcionario',
         ]);
 
-        return back()->with('success', '¡Funcionario creado exitosamente!');
+        \App\Helpers\Historial::registrar('Usuarios', 'Crear', 'Se creó el funcionario: ' . $request->name);
+
+        return redirect()->route('funcionario.funcionarios.index')->with('success', '¡Funcionario creado exitosamente!');
     })->name('funcionarios.store');
+
+    Route::get('/funcionarios/{id}/editar', function ($id) {
+        if (Auth::user()->tipo_usuario !== 'Funcionario') {
+            abort(403);
+        }
+        $funcionario = \App\Models\User::findOrFail($id);
+        return view('funcionario.funcionarios.editar', compact('funcionario'));
+    })->name('funcionarios.editar');
+
+    Route::put('/funcionarios/{id}', function (Request $request, $id) {
+        if (Auth::user()->tipo_usuario !== 'Funcionario') {
+            abort(403);
+        }
+        $funcionario = \App\Models\User::findOrFail($id);
+
+        $rules = [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $id],
+        ];
+
+        if ($request->filled('password')) {
+            $rules['password'] = ['confirmed', \Illuminate\Validation\Rules\Password::defaults()];
+        }
+
+        $request->validate($rules);
+
+        $funcionario->name = $request->name;
+        $funcionario->email = $request->email;
+        if ($request->filled('password')) {
+            $funcionario->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+        $funcionario->save();
+
+        \App\Helpers\Historial::registrar('Usuarios', 'Actualizar', 'Se actualizó el funcionario: ' . $funcionario->name);
+
+        return redirect()->route('funcionario.funcionarios.index')->with('success', 'Funcionario actualizado correctamente.');
+    })->name('funcionarios.update');
+
+    Route::delete('/funcionarios/{id}', function ($id) {
+        if (Auth::user()->tipo_usuario !== 'Funcionario') {
+            abort(403);
+        }
+        if (Auth::id() == $id) {
+            return redirect()->route('funcionario.funcionarios.index')->with('error', 'No puedes eliminar tu propia cuenta.');
+        }
+        $funcionario = \App\Models\User::findOrFail($id);
+        $nombre = $funcionario->name;
+        $funcionario->delete();
+
+        \App\Helpers\Historial::registrar('Usuarios', 'Eliminar', 'Se eliminó el funcionario: ' . $nombre);
+
+        return redirect()->route('funcionario.funcionarios.index')->with('success', 'Funcionario eliminado correctamente.');
+    })->name('funcionarios.destroy');
 
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
     Route::get('/clientes/crear', [ClienteController::class, 'create'])->name('clientes.crear');
