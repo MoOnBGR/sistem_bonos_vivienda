@@ -48,71 +48,101 @@
             </div>
         @endif
 
-        <!-- Formulario: Guardar cambios -->
-        <form method="POST" action="{{ route('expedientes.update', $expediente->id_expediente) }}">
-            @csrf
-            @method('PUT')
+        @if ($expediente->estado === 'Inactivo')
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-sm text-yellow-800">
+                Este expediente está <strong>Inactivo</strong>. No se puede editar mientras esté cerrado.
+                Usa "Reabrir expediente" abajo si necesitas hacer cambios.
+            </div>
 
-            <!-- Cliente (solo lectura) -->
+            <!-- Información en solo lectura -->
             <div class="expediente-form-group">
                 <label>Cliente</label>
                 <p class="text-gray-800 font-medium bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                    {{ $expediente->cliente->nombre }} {{ $expediente->cliente->apellidos }} (no editable)
+                    {{ $expediente->cliente->nombre }} {{ $expediente->cliente->apellidos }}
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- Fecha de apertura (solo lectura) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div class="expediente-form-group">
                     <label>Fecha apertura</label>
                     <p class="text-gray-800 font-medium bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                        {{ \Carbon\Carbon::parse($expediente->fecha_creacion)->format('d/m/Y') }} (no editable)
+                        {{ \Carbon\Carbon::parse($expediente->fecha_creacion)->format('d/m/Y') }}
                     </p>
                 </div>
 
-                <!-- Funcionario -->
                 <div class="expediente-form-group">
-                    <label for="id_funcionario">Funcionario</label>
-                    <select id="id_funcionario" name="id_funcionario" required>
-                        @foreach ($funcionarios as $funcionario)
-                            <option value="{{ $funcionario->id }}"
-                                {{ old('id_funcionario', $expediente->id_funcionario) == $funcionario->id ? 'selected' : '' }}>
-                                {{ $funcionario->name }}
-                            </option>
-                        @endforeach
+                    <label>Funcionario</label>
+                    <p class="text-gray-800 font-medium bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                        {{ $expediente->funcionario->name }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="expediente-form-group mb-6">
+                <label>Estado</label>
+                <p class="text-gray-800 font-medium bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                    {{ $expediente->estado }}
+                </p>
+            </div>
+        @else
+            <!-- Formulario: Guardar cambios (solo visible si NO está inactivo) -->
+            <form method="POST" action="{{ route('expedientes.update', $expediente->id_expediente) }}">
+                @csrf
+                @method('PUT')
+
+                <!-- Cliente (solo lectura) -->
+                <div class="expediente-form-group">
+                    <label>Cliente</label>
+                    <p class="text-gray-800 font-medium bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                        {{ $expediente->cliente->nombre }} {{ $expediente->cliente->apellidos }} (no editable)
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Fecha de apertura (solo lectura) -->
+                    <div class="expediente-form-group">
+                        <label>Fecha apertura</label>
+                        <p class="text-gray-800 font-medium bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                            {{ \Carbon\Carbon::parse($expediente->fecha_creacion)->format('d/m/Y') }} (no editable)
+                        </p>
+                    </div>
+
+                    <!-- Funcionario -->
+                    <div class="expediente-form-group">
+                        <label for="id_funcionario">Funcionario</label>
+                        <select id="id_funcionario" name="id_funcionario" required>
+                            @foreach ($funcionarios as $funcionario)
+                                <option value="{{ $funcionario->id }}"
+                                    {{ old('id_funcionario', $expediente->id_funcionario) == $funcionario->id ? 'selected' : '' }}>
+                                    {{ $funcionario->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Estado -->
+                <div class="expediente-form-group">
+                    <label for="estado">Estado</label>
+                    <select id="estado" name="estado">
+                        <option value="En proceso" {{ old('estado', $expediente->estado) === 'En proceso' ? 'selected' : '' }}>En proceso</option>
+                        <option value="Completado" {{ old('estado', $expediente->estado) === 'Completado' ? 'selected' : '' }}>Completado</option>
                     </select>
                 </div>
-            </div>
 
-            <!-- Estado -->
-            <div class="expediente-form-group">
-                <label for="estado">Estado</label>
-                <select id="estado" name="estado">
-                    <option value="En proceso" {{ old('estado', $expediente->estado) === 'En proceso' ? 'selected' : '' }}>En proceso</option>
-                    <option value="Completado" {{ old('estado', $expediente->estado) === 'Completado' ? 'selected' : '' }}>Completado</option>
-                </select>
-            </div>
+                <!-- Necesario porque Id_Cliente es requerido por el Request -->
+                <input type="hidden" name="Id_Cliente" value="{{ $expediente->Id_Cliente }}">
 
-            @if ($expediente->estado === 'Inactivo')
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-sm text-yellow-800">
-                    Este expediente está actualmente <strong>Inactivo</strong>. Si le das "Guardar cambios" aquí, el estado
-                    volverá a "En proceso". Si no quieres cambiar el estado, usa "Cancelar" o el botón "Reabrir expediente"
-                    de abajo en su lugar.
+                <div class="flex gap-3 mt-6 mb-8">
+                    <button type="submit" class="expediente-btn">
+                        Guardar cambios
+                    </button>
+                    <a href="{{ route('expedientes.consultar', $expediente->Id_Cliente) }}" class="expediente-btn expediente-btn-secundario">
+                        Cancelar
+                    </a>
                 </div>
-            @endif
-
-            <!-- Necesario porque Id_Cliente es requerido por el Request -->
-            <input type="hidden" name="Id_Cliente" value="{{ $expediente->Id_Cliente }}">
-
-            <div class="flex gap-3 mt-6 mb-8">
-                <button type="submit" class="expediente-btn">
-                    Guardar cambios
-                </button>
-                <a href="{{ route('expedientes.consultar', $expediente->Id_Cliente) }}" class="expediente-btn expediente-btn-secundario">
-                    Cancelar
-                </a>
-            </div>
-        </form>
+            </form>
+        @endif
 
         <!-- Separador -->
         <hr class="my-6 border-gray-200">

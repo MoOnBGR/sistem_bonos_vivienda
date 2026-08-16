@@ -12,6 +12,10 @@
         modalMoverDocumento: null 
     }">
 
+        @php
+            $expedienteInactivo = $expediente->estado === 'Inactivo';
+        @endphp
+
         <!-- Pestañas de navegación -->
         <div class="flex gap-2 mb-6 border-b border-gray-200 pb-4">
             <a href="{{ route('expedientes.index') }}"
@@ -60,15 +64,32 @@
             </p>
         </div>
 
+        @if ($expedienteInactivo)
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-sm text-yellow-800">
+                Este expediente está <strong>Inactivo</strong>. Solo puedes consultar carpetas y documentos —
+                no se pueden crear ni renombrar carpetas, ni subir, validar, mover o eliminar documentos hasta reabrirlo.
+            </div>
+        @endif
+
         <!-- Botón Validar Documentos -->
         <div class="mb-4">
-            <a href="{{ route('funcionario.documentos.buscar', ['cedula' => $cliente->identificacion]) }}" 
-               class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition font-medium flex items-center gap-2 w-fit">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                Validar Documentos
-            </a>
+            @if ($expedienteInactivo)
+                <span class="bg-gray-300 text-gray-500 px-6 py-3 rounded-lg font-medium flex items-center gap-2 w-fit cursor-not-allowed"
+                      title="Expediente cerrado: no se pueden validar documentos.">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Validar Documentos (bloqueado)
+                </span>
+            @else
+                <a href="{{ route('funcionario.documentos.buscar', ['cedula' => $cliente->identificacion]) }}" 
+                   class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition font-medium flex items-center gap-2 w-fit">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Validar Documentos
+                </a>
+            @endif
         </div>
 
         <!-- Breadcrumb -->
@@ -89,10 +110,16 @@
         <!-- Carpetas -->
         <div class="flex items-center justify-between mb-2">
             <h4 class="font-semibold text-gray-700">Carpetas</h4>
-            <button type="button" @click="modalNuevaCarpeta = true"
-                    class="text-[#550000] font-medium hover:underline bg-transparent">
-                + Nueva carpeta
-            </button>
+            @if ($expedienteInactivo)
+                <span class="text-gray-400 text-sm cursor-not-allowed" title="Expediente cerrado: no se pueden crear carpetas.">
+                    + Nueva carpeta (bloqueado)
+                </span>
+            @else
+                <button type="button" @click="modalNuevaCarpeta = true"
+                        class="text-[#550000] font-medium hover:underline bg-transparent">
+                    + Nueva carpeta
+                </button>
+            @endif
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -103,19 +130,24 @@
                         📁 <span class="truncate">{{ $carpetaItem->nombre }}</span>
                     </a>
                     <div class="flex gap-3 mt-2 text-xs">
-                        <button type="button"
-                                onclick="renombrarCarpeta({{ $carpetaItem->id_carpeta }}, '{{ addslashes($carpetaItem->nombre) }}')"
-                                class="text-[#550000] hover:underline bg-transparent">
-                            Editar
-                        </button>
-                        <form method="POST" action="{{ route('expedientes.carpetas.destroy', $carpetaItem->id_carpeta) }}"
-                              onsubmit="return confirm('¿Eliminar esta carpeta y todo su contenido?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-[#550000] hover:underline bg-transparent">
-                                Eliminar
+                        @if ($expedienteInactivo)
+                            <span class="text-gray-400 cursor-not-allowed" title="Expediente cerrado.">Editar</span>
+                            <span class="text-gray-400 cursor-not-allowed" title="Expediente cerrado.">Eliminar</span>
+                        @else
+                            <button type="button"
+                                    onclick="renombrarCarpeta({{ $carpetaItem->id_carpeta }}, '{{ addslashes($carpetaItem->nombre) }}')"
+                                    class="text-[#550000] hover:underline bg-transparent">
+                                Editar
                             </button>
-                        </form>
+                            <form method="POST" action="{{ route('expedientes.carpetas.destroy', $carpetaItem->id_carpeta) }}"
+                                  onsubmit="return confirm('¿Eliminar esta carpeta y todo su contenido?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-[#550000] hover:underline bg-transparent">
+                                    Eliminar
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             @empty
@@ -138,6 +170,7 @@
         </div>
 
         <!-- Modal: Nueva carpeta -->
+        @if (!$expedienteInactivo)
         <div x-show="modalNuevaCarpeta" x-cloak
              class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg p-6 w-full max-w-sm" @click.outside="modalNuevaCarpeta = false">
@@ -158,6 +191,7 @@
                 </form>
             </div>
         </div>
+        @endif
 
         @if ($carpetaActual)
             <!-- DOCUMENTOS DENTRO DE LA CARPETA -->
@@ -166,23 +200,30 @@
                     Documentos en "{{ $carpetaActual->nombre }}"
                 </h4>
                 <div class="flex gap-2">
-                    @if(session('documento_a_mover'))
+                    @if ($expedienteInactivo)
+                        <span class="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed"
+                              title="Expediente cerrado: no se pueden subir documentos.">
+                            Subir documento (bloqueado)
+                        </span>
+                    @else
+                        @if(session('documento_a_mover'))
+                            <button type="button" 
+                                    id="btnPegar"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                                📋 Pegar documento
+                            </button>
+                            <button type="button" 
+                                    id="btnCancelarPegar"
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                                Cancelar
+                            </button>
+                        @endif
                         <button type="button" 
-                                id="btnPegar"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                            📋 Pegar documento
-                        </button>
-                        <button type="button" 
-                                id="btnCancelarPegar"
-                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                            Cancelar
+                                @click="modalSubirDocumento = true"
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                            Subir documento
                         </button>
                     @endif
-                    <button type="button" 
-                            @click="modalSubirDocumento = true"
-                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                        Subir documento
-                    </button>
                 </div>
             </div>
 
@@ -226,20 +267,25 @@
                             </td>
                             <td class="py-2 pr-4 text-right">
                                 <div class="flex justify-end items-center gap-2">
-                                    <button type="button" 
-                                            class="btn-accion text-blue-600 hover:text-blue-800 font-medium transition text-sm"
-                                            data-id="{{ $documento->id_documento }}"
-                                            data-nombre="{{ $documento->nombre_doc }}"
-                                            data-tipo="copiar">
-                                        Copiar
-                                    </button>
-                                    <button type="button" 
-                                            class="btn-accion text-yellow-600 hover:text-yellow-800 font-medium transition text-sm"
-                                            data-id="{{ $documento->id_documento }}"
-                                            data-nombre="{{ $documento->nombre_doc }}"
-                                            data-tipo="cortar">
-                                        Cortar
-                                    </button>
+                                    @if ($expedienteInactivo)
+                                        <span class="text-gray-400 text-sm cursor-not-allowed" title="Expediente cerrado.">Copiar</span>
+                                        <span class="text-gray-400 text-sm cursor-not-allowed" title="Expediente cerrado.">Cortar</span>
+                                    @else
+                                        <button type="button" 
+                                                class="btn-accion text-blue-600 hover:text-blue-800 font-medium transition text-sm"
+                                                data-id="{{ $documento->id_documento }}"
+                                                data-nombre="{{ $documento->nombre_doc }}"
+                                                data-tipo="copiar">
+                                            Copiar
+                                        </button>
+                                        <button type="button" 
+                                                class="btn-accion text-yellow-600 hover:text-yellow-800 font-medium transition text-sm"
+                                                data-id="{{ $documento->id_documento }}"
+                                                data-nombre="{{ $documento->nombre_doc }}"
+                                                data-tipo="cortar">
+                                            Cortar
+                                        </button>
+                                    @endif
                                     <a href="{{ Storage::url($documento->ruta_almac) }}" 
                                        target="_blank" 
                                        class="text-gray-600 hover:text-gray-800 font-medium transition text-sm">
@@ -260,6 +306,7 @@
             </div>
 
             <!-- MODAL: SUBIR DOCUMENTO A CARPETA -->
+            @if (!$expedienteInactivo)
             <div x-show="modalSubirDocumento" x-cloak
                  class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                 <div class="bg-white rounded-lg p-6 w-full max-w-md" @click.outside="modalSubirDocumento = false">
@@ -299,6 +346,7 @@
                     </form>
                 </div>
             </div>
+            @endif
         @endif
 
         <script>

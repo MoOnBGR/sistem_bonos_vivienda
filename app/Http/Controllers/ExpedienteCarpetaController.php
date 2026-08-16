@@ -40,6 +40,10 @@ class ExpedienteCarpetaController extends Controller
 
     public function store(Request $request, Expediente $expediente)
     {
+        if ($expediente->estado === 'Inactivo') {
+            return back()->with('error', 'Este expediente está cerrado. No se pueden crear carpetas.');
+        }
+
         $request->validate([
             'nombre' => 'required|string|max:100',
             'id_carpeta_padre' => 'nullable|exists:carpetas_expedientes,id_carpeta',
@@ -68,6 +72,12 @@ class ExpedienteCarpetaController extends Controller
 
     public function update(Request $request, Carpeta $carpeta)
     {
+        $expediente = Expediente::findOrFail($carpeta->id_expediente);
+
+        if ($expediente->estado === 'Inactivo') {
+            return back()->with('error', 'Este expediente está cerrado. No se pueden renombrar carpetas.');
+        }
+
         $request->validate([
             'nombre' => 'required|string|max:100',
         ]);
@@ -92,6 +102,12 @@ class ExpedienteCarpetaController extends Controller
 
     public function destroy(Carpeta $carpeta)
     {
+        $expediente = Expediente::findOrFail($carpeta->id_expediente);
+
+        if ($expediente->estado === 'Inactivo') {
+            return back()->with('error', 'Este expediente está cerrado. No se pueden eliminar carpetas.');
+        }
+
         $nombre = $carpeta->nombre;
         $expedienteId = $carpeta->id_expediente;
 

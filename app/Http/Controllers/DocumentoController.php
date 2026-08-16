@@ -40,6 +40,10 @@ class DocumentoController extends Controller
             'tipo_doc' => 'required|string|max:80'
         ]);
 
+        if (Expediente::findOrFail($request->id_expediente)->estado === 'Inactivo') {
+            return back()->with('error', 'Este expediente está cerrado. No se pueden subir documentos.');
+        }
+
         $existe = Documento::where('id_expediente', $request->id_expediente)
                           ->where('nombre_doc', $request->nombre_doc)
                           ->exists();
@@ -83,7 +87,10 @@ class DocumentoController extends Controller
     public function update(Request $request, $id)
     {
         $documento = Documento::findOrFail($id);
-        
+        if ($documento->expediente->estado === 'Inactivo') {
+            return back()->with('error', 'Este expediente está cerrado. No se pueden validar documentos.');
+        }
+
         $request->validate([
             'estado_doc' => 'required|in:Validado,Rechazado',
             'motivo_rechazo' => 'required_if:estado_doc,Rechazado|nullable|string|max:500',
@@ -127,7 +134,11 @@ class DocumentoController extends Controller
     public function destroy($id)
     {
         $documento = Documento::findOrFail($id);
-        
+
+        if ($documento->expediente->estado === 'Inactivo') {
+            return back()->with('error', 'Este expediente está cerrado. No se pueden eliminar documentos.');
+        }
+
         if (Storage::disk('public')->exists($documento->ruta_almac)) {
             Storage::disk('public')->delete($documento->ruta_almac);
         }
@@ -217,6 +228,10 @@ class DocumentoController extends Controller
             'archivo' => 'required|file|max:20480|mimes:pdf',
         ]);
 
+        if (Expediente::findOrFail($request->id_expediente)->estado === 'Inactivo') {
+            return back()->with('error', 'Este expediente está cerrado. No se pueden subir documentos.');
+        }
+
         $rechazadoAnterior = Documento::where('id_expediente', $request->id_expediente)
                                       ->where('nombre_doc', $request->nombre_doc)
                                       ->where('estado_doc', 'Rechazado')
@@ -301,6 +316,10 @@ class DocumentoController extends Controller
             
             if (!$expediente) {
                 return redirect()->back()->with('error', 'Expediente no encontrado.');
+            }
+
+            if ($expediente->estado === 'Inactivo') {
+                return redirect()->back()->with('error', 'Este expediente está cerrado. No se pueden requerir documentos.');
             }
 
             $clienteId = $expediente->Id_Cliente;
@@ -436,6 +455,11 @@ class DocumentoController extends Controller
                 'id_carpeta' => 'nullable|exists:carpetas_expedientes,id_carpeta',
             ]);
 
+            if (Expediente::findOrFail($request->id_expediente)->estado === 'Inactivo') {
+                return redirect()->back()->withInput()
+                    ->with('error', 'Este expediente está cerrado. No se pueden subir documentos.');
+            }
+
             $existe = Documento::where('id_expediente', $request->id_expediente)
                               ->where('nombre_doc', $request->nombre_doc)
                               ->exists();
@@ -486,6 +510,10 @@ class DocumentoController extends Controller
         $cliente = auth()->user()->cliente;
         if ($documento->Id_Cliente != $cliente->Id_Cliente) {
             abort(403, 'No tienes permiso para eliminar este documento.');
+        }
+
+        if ($documento->expediente->estado === 'Inactivo') {
+            return back()->with('error', 'Este expediente está cerrado. No se pueden eliminar documentos.');
         }
         
         if ($documento->estado_doc == 'Validado') {
@@ -540,6 +568,10 @@ class DocumentoController extends Controller
         ]);
 
         $expediente = Expediente::findOrFail($expedienteId);
+
+        if ($expediente->estado === 'Inactivo') {
+            return back()->with('error', 'Este expediente está cerrado. No se pueden subir documentos.');
+        }
         
         $existe = Documento::where('id_expediente', $expedienteId)
                           ->where('nombre_doc', $request->nombre_doc)
@@ -584,6 +616,11 @@ class DocumentoController extends Controller
         ]);
 
         $documento = Documento::findOrFail($id);
+
+        if ($documento->expediente->estado === 'Inactivo') {
+            return back()->with('error', 'Este expediente está cerrado. No se pueden mover documentos.');
+        }
+
         $carpetaOrigen = $documento->id_carpeta;
         $documento->id_carpeta = $request->id_carpeta_destino;
         $documento->save();
@@ -626,6 +663,12 @@ class DocumentoController extends Controller
     // ==========================================
    public function pegarDocumento(Request $request, $expedienteId)
 {
+    $expediente = Expediente::findOrFail($expedienteId);
+
+    if ($expediente->estado === 'Inactivo') {
+        return response()->json(['error' => 'Este expediente está cerrado.'], 403);
+    }
+
     $documentoId = session('documento_a_mover');
     $tipo = session('tipo_operacion', 'cortar');
     
